@@ -21,16 +21,47 @@ Startup:
   ld hl, _VRAM
   ld bc, $800
   call ZeroMemory
-; Copy sprite data
+; Zero out sprite attribute data
+  ld hl, _OAMRAM
+  ld bc, 40*4 ; 40 sprites, 4 bytes each
+  call ZeroMemory
+; Copy sprite data 
   ld hl, _VRAM
   ld de, SpriteData
   ld bc, EndSpriteData - SpriteData
   call CopyMemory
-; TODO - Set up sprite to display on screen
-; TODO - Initialise palettes
+; Set up sprite to display on screen (TODO cleanup)
+  ; top-left
+  ld a, 80
+  ld [_OAMRAM], a
+  ld [_OAMRAM+1], a
+  ld a, 1
+  ld [_OAMRAM+2], a
+  ; bottom-left
+  ld a, 88
+  ld [_OAMRAM+4], a
+  ld a, 80
+  ld [_OAMRAM+5], a
+  ld a, 2
+  ld [_OAMRAM+6], a
+  ; top-right
+  ld a, 80
+  ld [_OAMRAM+8], a
+  ld a, 88
+  ld [_OAMRAM+9], a
+  ld a, 3
+  ld [_OAMRAM+10], a
+  ; bottom-right
+  ld a, 88
+  ld [_OAMRAM+12], a
+  ld [_OAMRAM+13], a
+  ld a, 4
+  ld [_OAMRAM+14], a
+; Initialise palettes
+  ld a, %11100100
+  ld [rOBP0], a
 ; Turn display back on
-  ld a, [rLCDC]
-  or LCDCF_ON
+  ld a, LCDCF_ON|LCDCF_BGOFF|LCDCF_WINOFF|LCDCF_OBJ8|LCDCF_OBJON
   ld [rLCDC], a
 GameLoop:
   ; call WaitForNextVerticalBlank
