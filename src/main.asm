@@ -1,5 +1,8 @@
 INCLUDE "hardware.inc"
 
+headAnimationTimer EQU _RAM
+legsAnimationTimer EQU _RAM+1
+
 SECTION "ROM Title", ROM0[$0134]
   DB "Skateboy"
 
@@ -30,7 +33,9 @@ Startup:
   ld de, SpriteData
   ld bc, EndSpriteData - SpriteData
   call CopyMemory
-; Set up sprite to display on screen (TODO cleanup)
+; Set up sprite to display on screen
+  ld a, 10
+  ld [legsAnimationTimer], a
   ; top-left
   ld a, 80
   ld [_OAMRAM], a
@@ -64,12 +69,56 @@ Startup:
   ld a, LCDCF_ON|LCDCF_BGOFF|LCDCF_WINOFF|LCDCF_OBJ8|LCDCF_OBJON
   ld [rLCDC], a
 GameLoop:
-  ; call WaitForNextVerticalBlank
-  ; ... do stuff
-; Should be displaying now, nothing to do
-  .sleep
-    halt
-  jr .sleep
+  call WaitForNextVerticalBlank
+  call AnimateHead
+  call AnimateLegs
+  jp GameLoop
+
+AnimateHead:
+  ld a, [headAnimationTimer]
+  dec a
+  jr nz, .timerIsNotZero
+    ld a, [_OAMRAM+2]
+    cp 1
+    jr nz, .secondSpriteInUse
+      ld a, 5
+      ld [_OAMRAM+2], a
+      ld a, 7
+      ld [_OAMRAM+10], a
+      jr .endSpriteSwap
+    .secondSpriteInUse
+      ld a, 1
+      ld [_OAMRAM+2], a
+      ld a, 3
+      ld [_OAMRAM+10], a
+    .endSpriteSwap
+    ld a, 100
+  .timerIsNotZero
+  ld [headAnimationTimer], a
+  ret
+
+AnimateLegs:
+  ld a, [legsAnimationTimer]
+  dec a
+  jr nz, .timerIsNotZero
+    ld a, [_OAMRAM+6]
+    cp 2
+    jr nz, .secondSpriteInUse
+      ld a, 6
+      ld [_OAMRAM+6], a
+      ld a, 8
+      ld [_OAMRAM+14], a
+      jr .endSpriteSwap
+    .secondSpriteInUse
+      ld a, 2
+      ld [_OAMRAM+6], a
+      ld a, 4
+      ld [_OAMRAM+14], a
+    .endSpriteSwap
+    ld a, 5
+  .timerIsNotZero
+  ld [legsAnimationTimer], a
+  ret
 
 INCLUDE "core.asm"
 
