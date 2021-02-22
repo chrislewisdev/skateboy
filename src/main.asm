@@ -24,14 +24,23 @@ Startup:
   ld hl, _VRAM
   ld bc, $800
   call ZeroMemory
+; Zero out tilemap
+  ld hl, _SCRN0
+  ld bc, 32*32
+  call ZeroMemory
 ; Zero out sprite attribute data
   ld hl, _OAMRAM
   ld bc, 40*4 ; 40 sprites, 4 bytes each
   call ZeroMemory
 ; Copy sprite data 
   ld hl, _VRAM
-  ld de, SpriteData
-  ld bc, EndSpriteData - SpriteData
+  ld de, GfxData
+  ld bc, EndGfxData - GfxData
+  call CopyMemory
+; Copy tilemap data
+  ld hl, _SCRN0
+  ld de, MapData
+  ld bc, EndMapData - MapData
   call CopyMemory
 ; Set up sprite to display on screen
   ld a, 10
@@ -40,33 +49,39 @@ Startup:
   ld a, 80
   ld [_OAMRAM], a
   ld [_OAMRAM+1], a
-  ld a, 1
+  ld a, 19
   ld [_OAMRAM+2], a
   ; bottom-left
   ld a, 88
   ld [_OAMRAM+4], a
   ld a, 80
   ld [_OAMRAM+5], a
-  ld a, 2
+  ld a, 20
   ld [_OAMRAM+6], a
   ; top-right
   ld a, 80
   ld [_OAMRAM+8], a
   ld a, 88
   ld [_OAMRAM+9], a
-  ld a, 3
+  ld a, 21
   ld [_OAMRAM+10], a
   ; bottom-right
   ld a, 88
   ld [_OAMRAM+12], a
   ld [_OAMRAM+13], a
-  ld a, 4
+  ld a, 22
   ld [_OAMRAM+14], a
 ; Initialise palettes
   ld a, %11100100
   ld [rOBP0], a
+  ld [rOBP1], a
+  ld [rBGP], a
+; Reset scroll registers
+  ld a, 0
+  ld [rSCX], a
+  ld [rSCY], a
 ; Turn display back on
-  ld a, LCDCF_ON|LCDCF_BGOFF|LCDCF_WINOFF|LCDCF_OBJ8|LCDCF_OBJON
+  ld a, LCDCF_ON|LCDCF_BG8000|LCDCF_BG9800|LCDCF_BGON|LCDCF_WINOFF|LCDCF_OBJ8|LCDCF_OBJON
   ld [rLCDC], a
 GameLoop:
   call WaitForNextVerticalBlank
@@ -79,17 +94,17 @@ AnimateHead:
   dec a
   jr nz, .timerIsNotZero
     ld a, [_OAMRAM+2]
-    cp 1
+    cp 19
     jr nz, .secondSpriteInUse
-      ld a, 5
+      ld a, 23
       ld [_OAMRAM+2], a
-      ld a, 7
+      ld a, 25
       ld [_OAMRAM+10], a
       jr .endSpriteSwap
     .secondSpriteInUse
-      ld a, 1
+      ld a, 19
       ld [_OAMRAM+2], a
-      ld a, 3
+      ld a, 21
       ld [_OAMRAM+10], a
     .endSpriteSwap
     ld a, 100
@@ -102,17 +117,17 @@ AnimateLegs:
   dec a
   jr nz, .timerIsNotZero
     ld a, [_OAMRAM+6]
-    cp 2
+    cp 20
     jr nz, .secondSpriteInUse
-      ld a, 6
+      ld a, 24
       ld [_OAMRAM+6], a
-      ld a, 8
+      ld a, 26
       ld [_OAMRAM+14], a
       jr .endSpriteSwap
     .secondSpriteInUse
-      ld a, 2
+      ld a, 20
       ld [_OAMRAM+6], a
-      ld a, 4
+      ld a, 22
       ld [_OAMRAM+14], a
     .endSpriteSwap
     ld a, 5
@@ -122,7 +137,11 @@ AnimateLegs:
 
 INCLUDE "core.asm"
 
-SpriteData:
-DS 16 ; Pad 16 bytes so sprite 0 is always blank
+GfxData:
+INCLUDE "gfx/tiles.asm"
 INCLUDE "gfx/sprites.asm"
-EndSpriteData:
+EndGfxData:
+
+MapData:
+INCLUDE "gfx/sample-map.asm"
+EndMapData:
