@@ -2,6 +2,16 @@ INCLUDE "hardware.inc"
 
 headAnimationTimer EQU _RAM
 legsAnimationTimer EQU _RAM+1
+input EQU _RAM+2
+
+BTN_DOWN EQU %10000000
+BTN_UP EQU %01000000
+BTN_LEFT EQU %00100000
+BTN_RIGHT EQU %00010000
+BTN_START EQU %00001000
+BTN_SELECT EQU %00000100
+BTN_B EQU %00000010
+BTN_A EQU %00000001
 
 SECTION "ROM Title", ROM0[$0134]
   DB "Skateboy"
@@ -85,9 +95,32 @@ Startup:
   ld [rLCDC], a
 GameLoop:
   call WaitForNextVerticalBlank
+  call ReadInput
   call AnimateHead
   call AnimateLegs
   jp GameLoop
+
+ReadInput:
+  ld a, P1F_GET_DPAD
+  ld [rP1], a
+  ld a, [rP1]
+  ld a, [rP1]
+  ld a, [rP1]
+  ld a, [rP1]
+  and a, %1111
+  swap a
+  ld b, a
+  ld a, P1F_GET_BTN
+  ld [rP1], a
+  ld a, [rP1]
+  ld a, [rP1]
+  ld a, [rP1]
+  ld a, [rP1]
+  and a, %1111
+  or a, b
+  cpl
+  ld [input], a
+  ret
 
 AnimateHead:
   ld a, [headAnimationTimer]
