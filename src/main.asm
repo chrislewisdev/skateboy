@@ -4,6 +4,7 @@ headAnimationTimer EQU _RAM
 legsAnimationTimer EQU _RAM+1
 input EQU _RAM+2
 previousInput EQU _RAM+3
+jumpVelocity EQU _RAM+4
 
 BTN_DOWN EQU %10000000
 BTN_UP EQU %01000000
@@ -55,6 +56,8 @@ Startup:
   call CopyMemory
 ; Set up sprite to display on screen
   call SetupPlayerSprite
+  ld a, 0
+  ld [jumpVelocity], a
 ; Initialise palettes
   ld a, %11100100
   ld [rOBP0], a
@@ -72,10 +75,34 @@ GameLoop:
   call ReadInput
   call AnimateHead
   call AnimateLegs
-  ; Temporary basic scrolling
+; Temporary basic scrolling
   ld a, [rSCX]
   add a, 2
   ld [rSCX], a
+; Jumping!
+  ld a, [previousInput]
+  and BTN_A
+  jr nz, .endJumpCheck
+    ld a, [input]
+    and BTN_A
+    jr z, .endJumpCheck
+      ld a, 5
+      ld [jumpVelocity], a
+  .endJumpCheck
+  ld a, [jumpVelocity]
+  or a  ; set flags
+  jr z, .endJumping
+    ld b, a
+    ld a, [_OAMRAM]
+    sub b
+    ld c, a
+    ld a, [_OAMRAM+1]
+    ld b, a
+    call PositionPlayerSprite
+    ld a, [jumpVelocity]
+    dec a
+    ld [jumpVelocity], a
+  .endJumping
   jp GameLoop
 
 ReadInput:
