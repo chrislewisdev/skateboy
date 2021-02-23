@@ -3,6 +3,7 @@ INCLUDE "hardware.inc"
 headAnimationTimer EQU _RAM
 legsAnimationTimer EQU _RAM+1
 input EQU _RAM+2
+previousInput EQU _RAM+3
 
 BTN_DOWN EQU %10000000
 BTN_UP EQU %01000000
@@ -53,34 +54,7 @@ Startup:
   ld bc, EndMapData - MapData
   call CopyMemory
 ; Set up sprite to display on screen
-  ld a, 10
-  ld [legsAnimationTimer], a
-  ; top-left
-  ld a, 80
-  ld [_OAMRAM], a
-  ld [_OAMRAM+1], a
-  ld a, 19
-  ld [_OAMRAM+2], a
-  ; bottom-left
-  ld a, 88
-  ld [_OAMRAM+4], a
-  ld a, 80
-  ld [_OAMRAM+5], a
-  ld a, 20
-  ld [_OAMRAM+6], a
-  ; top-right
-  ld a, 80
-  ld [_OAMRAM+8], a
-  ld a, 88
-  ld [_OAMRAM+9], a
-  ld a, 21
-  ld [_OAMRAM+10], a
-  ; bottom-right
-  ld a, 88
-  ld [_OAMRAM+12], a
-  ld [_OAMRAM+13], a
-  ld a, 22
-  ld [_OAMRAM+14], a
+  call SetupPlayerSprite
 ; Initialise palettes
   ld a, %11100100
   ld [rOBP0], a
@@ -98,9 +72,15 @@ GameLoop:
   call ReadInput
   call AnimateHead
   call AnimateLegs
+  ; Temporary basic scrolling
+  ld a, [rSCX]
+  add a, 2
+  ld [rSCX], a
   jp GameLoop
 
 ReadInput:
+  ld a, [input]
+  ld [previousInput], a
   ld a, P1F_GET_DPAD
   ld [rP1], a
   ld a, [rP1]
@@ -122,22 +102,62 @@ ReadInput:
   ld [input], a
   ret
 
+SetupPlayerSprite:
+  ld a, 10
+  ld [legsAnimationTimer], a
+  ld b, 40
+  ld c, 113
+  call PositionPlayerSprite
+  ; top-left
+  ld a, 21
+  ld [_OAMRAM+2], a
+  ; bottom-left
+  ld a, 22
+  ld [_OAMRAM+6], a
+  ; top-right
+  ld a, 23
+  ld [_OAMRAM+10], a
+  ; bottom-right
+  ld a, 24
+  ld [_OAMRAM+14], a
+  ret
+
+; b = X position
+; c = Y position
+PositionPlayerSprite:
+  ; set X values first
+  ld a, b
+  ld [_OAMRAM+1], a     ; top-left
+  ld [_OAMRAM+5], a     ; botom-left
+  add a, 8
+  ld [_OAMRAM+9], a     ; top-right
+  ld [_OAMRAM+13], a    ; bottom-right
+
+  ; set Y values
+  ld a, c
+  ld [_OAMRAM], a       ; top-left
+  ld [_OAMRAM+8], a     ; top-right
+  add a, 8
+  ld [_OAMRAM+4], a     ; bottom-left
+  ld [_OAMRAM+12], a    ; bottom-right
+  ret
+
 AnimateHead:
   ld a, [headAnimationTimer]
   dec a
   jr nz, .timerIsNotZero
     ld a, [_OAMRAM+2]
-    cp 19
+    cp 21
     jr nz, .secondSpriteInUse
-      ld a, 23
-      ld [_OAMRAM+2], a
       ld a, 25
+      ld [_OAMRAM+2], a
+      ld a, 27
       ld [_OAMRAM+10], a
       jr .endSpriteSwap
     .secondSpriteInUse
-      ld a, 19
-      ld [_OAMRAM+2], a
       ld a, 21
+      ld [_OAMRAM+2], a
+      ld a, 23
       ld [_OAMRAM+10], a
     .endSpriteSwap
     ld a, 100
@@ -150,20 +170,20 @@ AnimateLegs:
   dec a
   jr nz, .timerIsNotZero
     ld a, [_OAMRAM+6]
-    cp 20
+    cp 22
     jr nz, .secondSpriteInUse
-      ld a, 24
-      ld [_OAMRAM+6], a
       ld a, 26
+      ld [_OAMRAM+6], a
+      ld a, 28
       ld [_OAMRAM+14], a
       jr .endSpriteSwap
     .secondSpriteInUse
-      ld a, 20
-      ld [_OAMRAM+6], a
       ld a, 22
+      ld [_OAMRAM+6], a
+      ld a, 24
       ld [_OAMRAM+14], a
     .endSpriteSwap
-    ld a, 5
+    ld a, 2
   .timerIsNotZero
   ld [legsAnimationTimer], a
   ret
