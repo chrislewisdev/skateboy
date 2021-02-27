@@ -5,6 +5,7 @@ legsAnimationTimer EQU _RAM+1
 input EQU _RAM+2
 previousInput EQU _RAM+3
 jumpVelocity EQU _RAM+4
+isOnGround EQU _RAM+5
 
 BTN_DOWN EQU %10000000
 BTN_UP EQU %01000000
@@ -14,6 +15,8 @@ BTN_START EQU %00001000
 BTN_SELECT EQU %00000100
 BTN_B EQU %00000010
 BTN_A EQU %00000001
+
+SIGNED_BASELINE EQU 127
 
 SECTION "ROM Title", ROM0[$0134]
   DB "Skateboy"
@@ -56,10 +59,11 @@ Startup:
   call CopyMemory
 ; Set up sprite to display on screen
   call SetupPlayerSprite
-  ld a, 0
+  ld a, SIGNED_BASELINE
   ld [jumpVelocity], a
 ; Initialise palettes
   ld a, %11100100
+  ; ld a, %00011011
   ld [rOBP0], a
   ld [rOBP1], a
   ld [rBGP], a
@@ -80,29 +84,17 @@ GameLoop:
   add a, 2
   ld [rSCX], a
 ; Jumping!
+  call CheckOnGround
   ld a, [previousInput]
   and BTN_A
-  jr nz, .endJumpCheck
+  jr nz, .endOfJumpInputCheck
     ld a, [input]
     and BTN_A
-    jr z, .endJumpCheck
-      ld a, 5
+    jr z, .endOfJumpInputCheck
+      ld a, SIGNED_BASELINE + 5
       ld [jumpVelocity], a
-  .endJumpCheck
-  ld a, [jumpVelocity]
-  or a  ; set flags
-  jr z, .endJumping
-    ld b, a
-    ld a, [_OAMRAM]
-    sub b
-    ld c, a
-    ld a, [_OAMRAM+1]
-    ld b, a
-    call PositionPlayerSprite
-    ld a, [jumpVelocity]
-    dec a
-    ld [jumpVelocity], a
-  .endJumping
+  .endOfJumpInputCheck
+  call EvaluateVelocity
   jp GameLoop
 
 ReadInput:
@@ -128,6 +120,80 @@ ReadInput:
   cpl
   ld [input], a
   ret
+
+CheckOnGround:
+  ld a, [_OAMRAM]
+  add a, 4
+  ld b, 8
+  call Divide
+  ld hl, _SCRN0
+  ld a, c
+  ld bc, 32
+  or a
+  jr z, .rowSeekComplete
+  .untilRowSeekComplete
+    add hl, bc  ; one row
+    dec a
+    jr nz, .untilRowSeekComplete
+  .rowSeekComplete
+  ld bc, 5
+  add hl, bc ; constant X position
+  ld a, [hl]
+  cp 17
+  jr nz, .notOnGround
+  .onGround
+    ld a, 1
+    ld [isOnGround], a
+    ret
+  .notOnGround
+    ld a, 0
+    ld [isOnGround], a
+  ret
+
+EvaluateVelocity:
+  ld a, [jumpVelocity]
+  ld d, a
+  cp SIGNED_BASELINE
+  ; jr z, .endOfJumpLogic
+  jr c, .isFalling
+  .isJumping
+    sub a, SIGNED_BASELINE
+    ld b, a
+    ld a, [_OAMRAM]
+    sub a, b
+    ld b, 40
+    ld c, a
+    call PositionPlayerSprite
+    jr .endOfJumpLogic
+  .isFalling
+    ld b, a
+    ld a, SIGNED_BASELINE
+    sub a, b
+    ld b, a
+    ld a, [_OAMRAM]
+    add a, b
+    ld b, 40
+    ld c, a
+    call PositionPlayerSprite
+  .endOfJumpLogic
+  ld a, [isOnGround]
+  or a
+  jr nz, .isOnGround
+  .isNotOnGround
+    ; decay velocity
+    ld a, d
+    dec a
+    cp SIGNED_BASELINE - 5
+    ret c
+    ld [jumpVelocity], a
+    ret
+  .isOnGround
+    ld a, d
+    cp SIGNED_BASELINE
+    ret nc
+    ld a, SIGNED_BASELINE
+    ld [jumpVelocity], a
+    ret
 
 SetupPlayerSprite:
   ld a, 10

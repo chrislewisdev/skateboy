@@ -31,3 +31,15 @@ CopyMemory:
     or c
   jr nz, .untilAllDataIsCopied
   ret
+
+; a = top of fraction
+; b = bottom of fraction
+; return via c
+; (a / b)
+Divide:
+  ld c, 0
+  .untilDivisionComplete
+    sub a, b
+    ret c
+    inc c
+  jr .untilDivisionComplete
