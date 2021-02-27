@@ -1,1 +1,1 @@
-bgb64 build/skateboy.gb
+bgb64 -watch build/skateboy.gb

@@ -5,6 +5,23 @@
             "label": "build",
             "type": "shell",
             "command": "./build",
+            "group": "build",
+            "presentation": {
+                "panel": "dedicated",
+                "focus": false,
+                "reveal": "never"
+            },
+            "problemMatcher": [
+                "$rgbdserror",
+                "$rgbdslinkerror"
+            ]
+        },
+        {
+            "label": "run",
+            "type": "shell",
+            "isBackground": true,
+            "command": "./run",
+            "problemMatcher": [],
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -12,12 +29,8 @@
             "presentation": {
                 "panel": "dedicated",
                 "focus": false,
-                "reveal": "never",
+                "reveal": "never"
             },
-            "problemMatcher": [
-                "$rgbdserror",
-                "$rgbdslinkerror"
-            ]
         }
     ]
 }
