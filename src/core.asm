@@ -36,7 +36,7 @@ CopyMemory:
 ; b = bottom of fraction
 ; return via c
 ; (a / b)
-Divide:
+DivideAB:
   ld c, 0
   .untilDivisionComplete
     sub a, b

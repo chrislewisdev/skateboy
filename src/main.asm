@@ -5,7 +5,7 @@ legsAnimationTimer EQU _RAM+1
 input EQU _RAM+2
 previousInput EQU _RAM+3
 jumpVelocity EQU _RAM+4
-isOnGround EQU _RAM+5
+verticalPosition EQU _RAM+5
 
 BTN_DOWN EQU %10000000
 BTN_UP EQU %01000000
@@ -76,25 +76,38 @@ Startup:
   ld [rLCDC], a
 GameLoop:
   call WaitForNextVerticalBlank
-  call ReadInput
   call AnimateHead
   call AnimateLegs
 ; Temporary basic scrolling
   ld a, [rSCX]
   add a, 2
   ld [rSCX], a
+  call ReadInput
 ; Jumping!
   call CheckOnGround
-  ld a, [previousInput]
-  and BTN_A
-  jr nz, .endOfJumpInputCheck
-    ld a, [input]
+  jr nz, .notOnGround
+  .onGround
+    ld a, [previousInput]
     and BTN_A
-    jr z, .endOfJumpInputCheck
-      ld a, SIGNED_BASELINE + 5
-      ld [jumpVelocity], a
-  .endOfJumpInputCheck
+    jr nz, .endOfJumpInputCheck
+      ld a, [input]
+      and BTN_A
+      jr z, .endOfJumpInputCheck
+        ld a, SIGNED_BASELINE + 5
+        ld [jumpVelocity], a
+    .endOfJumpInputCheck
+    ; stop falling if on ground
+    ld a, [jumpVelocity]
+    cp SIGNED_BASELINE
+    jr nc, .endOfGroundCheck
+    ld a, SIGNED_BASELINE
+    ld [jumpVelocity], a
+    jr .endOfGroundCheck
+  .notOnGround
+    call DecayVelocity
+  .endOfGroundCheck
   call EvaluateVelocity
+  call PositionPlayerSprite
   jp GameLoop
 
 ReadInput:
@@ -122,10 +135,9 @@ ReadInput:
   ret
 
 CheckOnGround:
-  ld a, [_OAMRAM]
-  add a, 4
+  ld a, [verticalPosition]
   ld b, 8
-  call Divide
+  call DivideAB
   ld hl, _SCRN0
   ld a, c
   ld bc, 32
@@ -143,11 +155,18 @@ CheckOnGround:
   jr nz, .notOnGround
   .onGround
     ld a, 1
-    ld [isOnGround], a
     ret
   .notOnGround
     ld a, 0
-    ld [isOnGround], a
+    ret
+
+DecayVelocity:
+  ; decay velocity
+  ld a, [jumpVelocity]
+  dec a
+  cp SIGNED_BASELINE - 5
+  ret c
+  ld [jumpVelocity], a
   ret
 
 EvaluateVelocity:
@@ -159,47 +178,26 @@ EvaluateVelocity:
   .isJumping
     sub a, SIGNED_BASELINE
     ld b, a
-    ld a, [_OAMRAM]
+    ld a, [verticalPosition]
     sub a, b
-    ld b, 40
-    ld c, a
-    call PositionPlayerSprite
+    ld [verticalPosition], a
     jr .endOfJumpLogic
   .isFalling
     ld b, a
     ld a, SIGNED_BASELINE
     sub a, b
     ld b, a
-    ld a, [_OAMRAM]
+    ld a, [verticalPosition]
     add a, b
-    ld b, 40
-    ld c, a
-    call PositionPlayerSprite
+    ld [verticalPosition], a
   .endOfJumpLogic
-  ld a, [isOnGround]
-  or a
-  jr nz, .isOnGround
-  .isNotOnGround
-    ; decay velocity
-    ld a, d
-    dec a
-    cp SIGNED_BASELINE - 5
-    ret c
-    ld [jumpVelocity], a
-    ret
-  .isOnGround
-    ld a, d
-    cp SIGNED_BASELINE
-    ret nc
-    ld a, SIGNED_BASELINE
-    ld [jumpVelocity], a
-    ret
+  ret
 
 SetupPlayerSprite:
   ld a, 10
   ld [legsAnimationTimer], a
-  ld b, 40
-  ld c, 113
+  ld a, 113
+  ld [verticalPosition], a
   call PositionPlayerSprite
   ; top-left
   ld a, 21
@@ -219,7 +217,7 @@ SetupPlayerSprite:
 ; c = Y position
 PositionPlayerSprite:
   ; set X values first
-  ld a, b
+  ld a, 40
   ld [_OAMRAM+1], a     ; top-left
   ld [_OAMRAM+5], a     ; botom-left
   add a, 8
@@ -227,7 +225,7 @@ PositionPlayerSprite:
   ld [_OAMRAM+13], a    ; bottom-right
 
   ; set Y values
-  ld a, c
+  ld a, [verticalPosition]
   ld [_OAMRAM], a       ; top-left
   ld [_OAMRAM+8], a     ; top-right
   add a, 8
