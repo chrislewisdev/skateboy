@@ -56,7 +56,7 @@ CheckJumpInput:
     ld a, [input]
     and BTN_A
     ret z
-      ld a, SIGNED_BASELINE + 4
+      ld a, SIGNED_BASELINE + 3
       ld [jumpVelocity], a
   ret
 
@@ -68,13 +68,21 @@ CheckLanding:
   ret nc
   ld a, SIGNED_BASELINE
   ld [jumpVelocity], a
+  ; TODO find a better way to pass over the overlapping pixel count from CheckOnGround
+  ; Adjust the player to rest exactly on top of the ground tile
+  ld a, [verticalPosition]
+  sub a, d
+  ld [verticalPosition], a
   ret
 
 CheckOnGround:
   ; What vertical row is the player on?
   ld a, [verticalPosition]
+  sub 1
   ld b, 8
   call DivideAB
+  add a, 8
+  ld d, a   ; store remainder in d (for use in CheckLanding)
   ld hl, _SCRN0
   ld a, c
   ld bc, 32
@@ -104,9 +112,10 @@ CheckOnGround:
     ret
 
 DecayVelocity:
-  ; only do every 2 frames
+  ; only do every 4 frames
+  ; TODO FIX this creates inconsistent jumps depending on what frame the player jumps on
   ld a, [frameCounter]
-  and 3 ; modulo 2
+  and 3 ; modulo 4
   ret nz
   ld a, [jumpVelocity]
   dec a
