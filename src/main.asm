@@ -80,7 +80,7 @@ GameLoop:
   call AnimateLegs
 ; Temporary basic scrolling
   ld a, [rSCX]
-  add a, 2
+  add a, 1
   ld [rSCX], a
   call ReadInput
 ; Jumping!
@@ -135,6 +135,7 @@ ReadInput:
   ret
 
 CheckOnGround:
+  ; What vertical row is the player on?
   ld a, [verticalPosition]
   ld b, 8
   call DivideAB
@@ -148,8 +149,13 @@ CheckOnGround:
     dec a
     jr nz, .untilRowSeekComplete
   .rowSeekComplete
-  ld bc, 5
-  add hl, bc ; constant X position
+  ; What horizontal column is the player on?
+  ld a, [rSCX]
+  add a, 40 ; constant X position
+  ld b, 8
+  call DivideAB
+  ld b, 0
+  add hl, bc
   ld a, [hl]
   cp 17
   jr nz, .notOnGround
