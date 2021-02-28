@@ -4,6 +4,7 @@ input               EQU _RAM+1
 previousInput       EQU _RAM+2
 jumpVelocity        EQU _RAM+3
 verticalPosition    EQU _RAM+4
+airTimer            EQU _RAM+5
 
 ; Input Constants
 BTN_DOWN      EQU %10000000

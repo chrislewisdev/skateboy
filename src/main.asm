@@ -24,10 +24,15 @@ GameLoop:
   call CheckOnGround
   jr nz, .notOnGround
   .onGround
+    ld a, 0
+    ld [airTimer], a
     call CheckJumpInput
     call CheckLanding
     jr .endOfGroundCheck
   .notOnGround
+    ld a, [airTimer]
+    inc a
+    ld [airTimer], a
     call DecayVelocity
   .endOfGroundCheck
   call EvaluateVelocity
@@ -112,9 +117,8 @@ CheckOnGround:
     ret
 
 DecayVelocity:
-  ; only do every 4 frames
-  ; TODO FIX this creates inconsistent jumps depending on what frame the player jumps on
-  ld a, [frameCounter]
+  ; only do every 4 frames once in air
+  ld a, [airTimer]
   and 3 ; modulo 4
   ret nz
   ld a, [jumpVelocity]
