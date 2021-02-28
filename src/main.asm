@@ -31,22 +31,21 @@ GameLoop:
     call DecayVelocity
   .endOfGroundCheck
   call EvaluateVelocity
-  call PositionPlayerSprite
+  call UpdateSprites
+  ld a, [frameCounter]
+  inc a
+  ld [frameCounter], a
   jp GameLoop
 
 InitState:
   ld a, SIGNED_BASELINE
   ld [jumpVelocity], a
-  ld a, 2
-  ld [legsAnimationTimer], a
-  ld a, 100
-  ld [headAnimationTimer], a
   ld a, 113
   ld [verticalPosition], a
 
 ScrollRight:
   ld a, [rSCX]
-  add a, 1
+  add a, 2
   ld [rSCX], a
   ret
 
@@ -57,10 +56,12 @@ CheckJumpInput:
     ld a, [input]
     and BTN_A
     ret z
-      ld a, SIGNED_BASELINE + 5
+      ld a, SIGNED_BASELINE + 4
       ld [jumpVelocity], a
   ret
 
+; To be called when the player is touching the ground
+; Zeroes their vertical velocity only if falling
 CheckLanding:
   ld a, [jumpVelocity]
   cp SIGNED_BASELINE
@@ -86,9 +87,10 @@ CheckOnGround:
   .rowSeekComplete
   ; What horizontal column is the player on?
   ld a, [rSCX]
-  add a, 40 ; constant X position
+  add a, FIXED_X_POSITION
   ld b, 8
   call DivideAB
+  ; the divide result is in c, set b to 0 so bc = c
   ld b, 0
   add hl, bc
   ld a, [hl]
@@ -102,7 +104,10 @@ CheckOnGround:
     ret
 
 DecayVelocity:
-  ; decay velocity
+  ; only do every 2 frames
+  ld a, [frameCounter]
+  and 3 ; modulo 2
+  ret nz
   ld a, [jumpVelocity]
   dec a
   cp SIGNED_BASELINE - 5
@@ -114,7 +119,6 @@ EvaluateVelocity:
   ld a, [jumpVelocity]
   ld d, a
   cp SIGNED_BASELINE
-  ; jr z, .endOfJumpLogic
   jr c, .isFalling
   .isJumping
     sub a, SIGNED_BASELINE

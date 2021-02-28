@@ -1,6 +1,16 @@
 INCLUDE "hardware.inc"
 INCLUDE "defines.inc"
 
+; Frame indices for the skater animations
+SKTR_HEAD_A_FRAME0    EQU 21
+SKTR_HEAD_B_FRAME0    EQU 23
+SKTR_LEG_A_FRAME0     EQU 22
+SKTR_LEG_B_FRAME0     EQU 24
+SKTR_HEAD_A_FRAME1    EQU 25
+SKTR_HEAD_B_FRAME1    EQU 27
+SKTR_LEG_A_FRAME1     EQU 26
+SKTR_LEG_B_FRAME1     EQU 28
+
 SECTION "Graphics functions", ROM0
 InitGraphics::
   ; Wait until vblank, disable screen so we can initialise things
@@ -31,7 +41,8 @@ InitGraphics::
   ld bc, EndMapData - MapData
   call CopyMemory
   ; Set up sprite to display on screen
-  call SetupPlayerSprite
+  call InitSprites
+  call UpdateSprites
   ; Initialise palettes
   ld a, %11100100
   ld [rOBP0], a
@@ -46,84 +57,79 @@ InitGraphics::
   ld [rLCDC], a
   ret
 
-PositionPlayerSprite::
+UpdateSprites::
   ; set X values first
-  ld a, 40
-  ld [_OAMRAM+1], a     ; top-left
-  ld [_OAMRAM+5], a     ; botom-left
+  ld a, FIXED_X_POSITION
+  ld [SPR0_X], a     ; top-left
+  ld [SPR1_X], a     ; bottom-left
   add a, 8
-  ld [_OAMRAM+9], a     ; top-right
-  ld [_OAMRAM+13], a    ; bottom-right
+  ld [SPR2_X], a     ; top-right
+  ld [SPR3_X], a    ; bottom-right
 
   ; set Y values
   ld a, [verticalPosition]
-  ld [_OAMRAM], a       ; top-left
-  ld [_OAMRAM+8], a     ; top-right
+  ld [SPR0_Y], a       ; top-left
+  ld [SPR2_Y], a     ; top-right
   add a, 8
-  ld [_OAMRAM+4], a     ; bottom-left
-  ld [_OAMRAM+12], a    ; bottom-right
+  ld [SPR1_Y], a     ; bottom-left
+  ld [SPR3_Y], a    ; bottom-right
   ret
 
-SetupPlayerSprite:
-  call PositionPlayerSprite
+InitSprites:
   ; top-left
-  ld a, 21
-  ld [_OAMRAM+2], a
+  ld a, SKTR_HEAD_A_FRAME0
+  ld [SPR0_ID], a
   ; bottom-left
-  ld a, 22
-  ld [_OAMRAM+6], a
+  ld a, SKTR_LEG_A_FRAME0
+  ld [SPR1_ID], a
   ; top-right
-  ld a, 23
-  ld [_OAMRAM+10], a
+  ld a, SKTR_HEAD_B_FRAME0
+  ld [SPR2_ID], a
   ; bottom-right
-  ld a, 24
-  ld [_OAMRAM+14], a
+  ld a, SKTR_LEG_B_FRAME0
+  ld [SPR3_ID], a
   ret
 
 AnimateHead::
-  ld a, [headAnimationTimer]
-  dec a
+  ld a, [frameCounter]
+  and a, 63 ; modulo 64
   jr nz, .timerIsNotZero
-    ld a, [_OAMRAM+2]
-    cp 21
+    ld a, [SPR0_ID]
+    cp SKTR_HEAD_A_FRAME0
     jr nz, .secondSpriteInUse
-      ld a, 25
-      ld [_OAMRAM+2], a
-      ld a, 27
-      ld [_OAMRAM+10], a
+      ld a, SKTR_HEAD_A_FRAME1
+      ld [SPR0_ID], a
+      ld a, SKTR_HEAD_B_FRAME1
+      ld [SPR2_ID], a
       jr .endSpriteSwap
     .secondSpriteInUse
-      ld a, 21
-      ld [_OAMRAM+2], a
-      ld a, 23
-      ld [_OAMRAM+10], a
+      ld a, SKTR_HEAD_A_FRAME0
+      ld [SPR0_ID], a
+      ld a, SKTR_HEAD_B_FRAME0
+      ld [SPR2_ID], a
     .endSpriteSwap
-    ld a, 100
   .timerIsNotZero
-  ld [headAnimationTimer], a
   ret
 
 AnimateLegs::
-  ld a, [legsAnimationTimer]
-  dec a
+  ld a, [frameCounter]
+  and a, 1  ; modulo 2
   jr nz, .timerIsNotZero
-    ld a, [_OAMRAM+6]
-    cp 22
+    ld a, [SPR1_ID]
+    cp SKTR_LEG_A_FRAME0
     jr nz, .secondSpriteInUse
-      ld a, 26
-      ld [_OAMRAM+6], a
-      ld a, 28
-      ld [_OAMRAM+14], a
+      ld a, SKTR_LEG_A_FRAME1
+      ld [SPR1_ID], a
+      ld a, SKTR_LEG_B_FRAME1
+      ld [SPR3_ID], a
       jr .endSpriteSwap
     .secondSpriteInUse
-      ld a, 22
-      ld [_OAMRAM+6], a
-      ld a, 24
-      ld [_OAMRAM+14], a
+      ld a, SKTR_LEG_A_FRAME0
+      ld [SPR1_ID], a
+      ld a, SKTR_LEG_B_FRAME0
+      ld [SPR3_ID], a
     .endSpriteSwap
-    ld a, 2
   .timerIsNotZero
-  ld [legsAnimationTimer], a
   ret
 
 GfxData:
