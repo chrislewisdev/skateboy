@@ -1,5 +1,9 @@
+INCLUDE "hardware.inc"
+INCLUDE "defines.inc"
+
+SECTION "Core functions", ROM0
 ; Waits for the START of a new vblank period to ensure maximum time is available.
-WaitForNextVerticalBlank:
+WaitForNextVerticalBlank::
   .untilVerticalBlank
     ld a, [rLY]
     cp 144
@@ -8,7 +12,7 @@ WaitForNextVerticalBlank:
 
 ; hl = destination address
 ; bc = no. bytes to zero
-ZeroMemory:
+ZeroMemory::
   .untilAllBytesAreZeroed
     ld [hl], $00
     inc hl
@@ -21,7 +25,7 @@ ZeroMemory:
 ; hl = destination address
 ; de = source address
 ; bc = no. bytes to copy
-CopyMemory:
+CopyMemory::
   .untilAllDataIsCopied
     ld a, [de]
     ld [hli], a
@@ -36,10 +40,34 @@ CopyMemory:
 ; b = bottom of fraction
 ; return via c
 ; (a / b)
-DivideAB:
+DivideAB::
   ld c, 0
   .untilDivisionComplete
     sub a, b
     ret c
     inc c
   jr .untilDivisionComplete
+
+ReadInput::
+  ld a, [input]
+  ld [previousInput], a
+  ld a, P1F_GET_DPAD
+  ld [rP1], a
+  ld a, [rP1]
+  ld a, [rP1]
+  ld a, [rP1]
+  ld a, [rP1]
+  and a, %1111
+  swap a
+  ld b, a
+  ld a, P1F_GET_BTN
+  ld [rP1], a
+  ld a, [rP1]
+  ld a, [rP1]
+  ld a, [rP1]
+  ld a, [rP1]
+  and a, %1111
+  or a, b
+  cpl
+  ld [input], a
+  ret
