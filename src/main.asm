@@ -50,7 +50,7 @@ InitState:
 
 ScrollRight:
   ld a, [rSCX]
-  add a, 2
+  add a, 1
   ld [rSCX], a
   ret
 
@@ -73,21 +73,22 @@ CheckLanding:
   ret nc
   ld a, SIGNED_BASELINE
   ld [jumpVelocity], a
-  ; TODO find a better way to pass over the overlapping pixel count from CheckOnGround
   ; Adjust the player to rest exactly on top of the ground tile
   ld a, [verticalPosition]
-  sub a, d
+  sub a, 1
+  and 7 ; modulo 8
+  ld b, a
+  ld a, [verticalPosition]
+  sub a, b
   ld [verticalPosition], a
   ret
 
 CheckOnGround:
   ; What vertical row is the player on?
   ld a, [verticalPosition]
-  sub 1
+  sub a, 1
   ld b, 8
   call DivideAB
-  add a, 8
-  ld d, a   ; store remainder in d (for use in CheckLanding)
   ld hl, _SCRN0
   ld a, c
   ld bc, 32
