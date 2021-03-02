@@ -32,8 +32,8 @@ InitGraphics::
   call ZeroMemory
   ; Copy sprite data 
   ld hl, _VRAM
-  ld de, GfxData
-  ld bc, EndGfxData - GfxData
+  ld de, TileData
+  ld bc, EndGfxData - TileData
   call CopyMemory
   ; Copy tilemap data
   ld hl, _SCRN0
@@ -132,11 +132,12 @@ AnimateLegs::
   .timerIsNotZero
   ret
 
-GfxData:
-INCLUDE "gfx/tiles.asm"
-INCLUDE "gfx/sprites.asm"
+TileData:
+INCBIN "data/tiles.bin"
+SpriteData:
+INCBIN "data/sprites.bin"
 EndGfxData:
 
 MapData:
-INCLUDE "gfx/sample-map.asm"
+INCBIN "data/sample-map.bin"
 EndMapData:
