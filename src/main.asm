@@ -17,8 +17,7 @@ Startup:
   call InitGraphics
 GameLoop:
   call WaitForNextVerticalBlank
-  call AnimateHead
-  call AnimateLegs
+  call DetermineAnimationFrames
   call ScrollRight
   call ReadInput
   call CheckOnGround
@@ -50,7 +49,7 @@ InitState:
 
 ScrollRight:
   ld a, [rSCX]
-  add a, 1
+  add a, 2
   ld [rSCX], a
   ret
 
@@ -124,7 +123,7 @@ DecayVelocity:
   ret nz
   ld a, [jumpVelocity]
   dec a
-  cp SIGNED_BASELINE - 5
+  cp SIGNED_BASELINE - 3
   ret c
   ld [jumpVelocity], a
   ret

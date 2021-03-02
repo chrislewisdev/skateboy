@@ -10,6 +10,13 @@ SKTR_HEAD_A_FRAME1    EQU 25
 SKTR_HEAD_B_FRAME1    EQU 27
 SKTR_LEG_A_FRAME1     EQU 26
 SKTR_LEG_B_FRAME1     EQU 28
+SKTR_HEAD_A_OLLIE     EQU 29
+SKTR_HEAD_B_OLLIE     EQU 31
+SKTR_LEG_A_OLLIE      EQU 30
+SKTR_LEG_B_OLLIE      EQU 32
+
+ANMT_HEAD     EQU %00000001
+ANMT_LEGS     EQU %00000010
 
 SECTION "Graphics functions", ROM0
 InitGraphics::
@@ -90,46 +97,77 @@ InitSprites:
   ld [SPR3_ID], a
   ret
 
-AnimateHead::
+DetermineAnimationFrames::
+  ; Process two-frame animation flags
   ld a, [frameCounter]
+  ld b, a
   and a, 63 ; modulo 64
-  jr nz, .timerIsNotZero
-    ld a, [SPR0_ID]
-    cp SKTR_HEAD_A_FRAME0
-    jr nz, .secondSpriteInUse
-      ld a, SKTR_HEAD_A_FRAME1
-      ld [SPR0_ID], a
-      ld a, SKTR_HEAD_B_FRAME1
-      ld [SPR2_ID], a
-      jr .endSpriteSwap
-    .secondSpriteInUse
-      ld a, SKTR_HEAD_A_FRAME0
-      ld [SPR0_ID], a
-      ld a, SKTR_HEAD_B_FRAME0
-      ld [SPR2_ID], a
-    .endSpriteSwap
-  .timerIsNotZero
+  jr nz, .headTimerIsNotZero
+    ld a, [animationFlags]
+    xor ANMT_HEAD
+    ld [animationFlags], a
+  .headTimerIsNotZero
+  ld a, b
+  and a, 1 ;modulo 2
+  jr nz, .legsTimerIsNotZero
+    ld a, [animationFlags]
+    xor ANMT_LEGS
+    ld [animationFlags], a
+  .legsTimerIsNotZero
+  call AnimateHead
+  call AnimateLegs
+  ; Check for ollie state
+  ld a, [airTimer]
+  ld b, a
+  or a
+  jr z, .isNotOllieing
+    ld a, SKTR_HEAD_A_OLLIE
+    ld [SPR0_ID], a
+    ld a, SKTR_HEAD_B_OLLIE
+    ld [SPR2_ID], a
+    ld a, b
+    cp 10
+    jr nc, .isNotOllieing
+      ld a, SKTR_LEG_A_OLLIE
+      ld [SPR1_ID], a
+      ld a, SKTR_LEG_B_OLLIE
+      ld [SPR3_ID], a
+      ret
+  .isNotOllieing
   ret
 
-AnimateLegs::
-  ld a, [frameCounter]
-  and a, 1  ; modulo 2
-  jr nz, .timerIsNotZero
-    ld a, [SPR1_ID]
-    cp SKTR_LEG_A_FRAME0
-    jr nz, .secondSpriteInUse
-      ld a, SKTR_LEG_A_FRAME1
-      ld [SPR1_ID], a
-      ld a, SKTR_LEG_B_FRAME1
-      ld [SPR3_ID], a
-      jr .endSpriteSwap
-    .secondSpriteInUse
-      ld a, SKTR_LEG_A_FRAME0
-      ld [SPR1_ID], a
-      ld a, SKTR_LEG_B_FRAME0
-      ld [SPR3_ID], a
-    .endSpriteSwap
-  .timerIsNotZero
+AnimateHead:
+  ld a, [animationFlags]
+  and ANMT_HEAD
+  jr nz, .secondSpriteInUse
+    ld a, SKTR_HEAD_A_FRAME1
+    ld [SPR0_ID], a
+    ld a, SKTR_HEAD_B_FRAME1
+    ld [SPR2_ID], a
+    jr .endSpriteSwap
+  .secondSpriteInUse
+    ld a, SKTR_HEAD_A_FRAME0
+    ld [SPR0_ID], a
+    ld a, SKTR_HEAD_B_FRAME0
+    ld [SPR2_ID], a
+  .endSpriteSwap
+  ret
+
+AnimateLegs:
+  ld a, [animationFlags]
+  and ANMT_LEGS
+  jr nz, .secondSpriteInUse
+    ld a, SKTR_LEG_A_FRAME1
+    ld [SPR1_ID], a
+    ld a, SKTR_LEG_B_FRAME1
+    ld [SPR3_ID], a
+    jr .endSpriteSwap
+  .secondSpriteInUse
+    ld a, SKTR_LEG_A_FRAME0
+    ld [SPR1_ID], a
+    ld a, SKTR_LEG_B_FRAME0
+    ld [SPR3_ID], a
+  .endSpriteSwap
   ret
 
 TileData:
