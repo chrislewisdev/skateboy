@@ -127,7 +127,13 @@ DetermineAnimationFrames::
     ld [SPR2_ID], a
     ld a, b
     cp 10
-    jr nc, .isNotOllieing
+    jr c, .isOllieing
+    ld a, [movementFlags]
+    and GRIND_FLAG
+    jr nz, .isOllieing
+    jr .isNotOllieing
+    ; TODO rename these... it is not just for ollieing
+    .isOllieing
       ld a, SKTR_LEG_A_OLLIE
       ld [SPR1_ID], a
       ld a, SKTR_LEG_B_OLLIE
@@ -176,6 +182,6 @@ SpriteData:
 INCBIN "data/sprites.bin"
 EndGfxData:
 
-MapData:
+MapData::
 INCBIN "data/sample-map.bin"
 EndMapData:

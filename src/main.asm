@@ -18,6 +18,7 @@ Startup:
 GameLoop:
   call WaitForNextVerticalBlank
   call DetermineAnimationFrames
+  call UpdateSprites
   call ScrollRight
   call ReadInput
   call CheckOnGround
@@ -32,10 +33,10 @@ GameLoop:
     ld a, [airTimer]
     inc a
     ld [airTimer], a
+    call CheckGrindInput
     call DecayVelocity
   .endOfGroundCheck
   call EvaluateVelocity
-  call UpdateSprites
   ld a, [frameCounter]
   inc a
   ld [frameCounter], a
@@ -46,6 +47,8 @@ InitState:
   ld [jumpVelocity], a
   ld a, 113
   ld [verticalPosition], a
+  ld a, 0
+  ld [movementFlags], a
 
 ScrollRight:
   ld a, [rSCX]
@@ -62,6 +65,37 @@ CheckJumpInput:
     ret z
       ld a, SIGNED_BASELINE + 3
       ld [jumpVelocity], a
+  ret
+
+CheckGrindInput:
+  ; press check only needs to apply when initiating the grind - ignore for now
+  ; ld a, [previousInput]
+  ; and BTN_B
+  ; ret nz
+    ld a, [input]
+    and BTN_B
+    jr z, .notGrinding
+      ld c, 0
+      call ResolveTileAddress
+      ld a, [hl]
+      cp 2
+      jr c, .notGrinding
+      cp 5
+      jr nc, .notGrinding
+        ; We are on a grindable surface and B has been pressed.
+        ld a, [movementFlags]
+        or GRIND_FLAG
+        ld [movementFlags], a
+        ld a, SIGNED_BASELINE
+        ld [jumpVelocity], a
+        ret
+  .notGrinding
+  ld a, [movementFlags]
+  ld b, a
+  ld a, GRIND_FLAG
+  cpl
+  and a, b
+  ld [movementFlags], a
   ret
 
 ; To be called when the player is touching the ground
@@ -82,13 +116,15 @@ CheckLanding:
   ld [verticalPosition], a
   ret
 
-CheckOnGround:
+; c = Y offset value
+; out hl = memory address of the player's
+ResolveTileAddress:
   ; What vertical row is the player on?
   ld a, [verticalPosition]
-  sub a, 1
+  sub a, c
   ld b, 8
   call DivideAB
-  ld hl, _SCRN0
+  ld hl, MapData
   ld a, c
   ld bc, 32
   or a
@@ -106,6 +142,11 @@ CheckOnGround:
   ; the divide result is in c, set b to 0 so bc = c
   ld b, 0
   add hl, bc
+  ret
+
+CheckOnGround:
+  ld c, 1
+  call ResolveTileAddress
   ld a, [hl]
   cp 17
   jr nz, .notOnGround
@@ -117,6 +158,9 @@ CheckOnGround:
     ret
 
 DecayVelocity:
+  ld a, [movementFlags]
+  and GRIND_FLAG
+  ret nz
   ; only do every 4 frames once in air
   ld a, [airTimer]
   and 3 ; modulo 4

@@ -6,6 +6,7 @@ jumpVelocity        EQU _RAM+3
 verticalPosition    EQU _RAM+4
 airTimer            EQU _RAM+5
 animationFlags      EQU _RAM+6
+movementFlags       EQU _RAM+7
 
 ; Input Constants
 BTN_DOWN      EQU %10000000
@@ -33,3 +34,5 @@ SPR3_ID     EQU _OAMRAM+14
 
 FIXED_X_POSITION  EQU 40
 SIGNED_BASELINE   EQU 127
+
+GRIND_FLAG        EQU %00000001
