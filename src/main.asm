@@ -68,13 +68,48 @@ CheckJumpInput:
   ret
 
 CheckGrindInput:
-  ; press check only needs to apply when initiating the grind - ignore for now
-  ; ld a, [previousInput]
-  ; and BTN_B
-  ; ret nz
+  ld a, [movementFlags]
+  and GRIND_FLAG
+  jr nz, .continueGrind
+  .initiateGrind
+    ; TODO increase the grace window for the grind before enabling this
+    ; ld a, [previousInput]
+    ; and BTN_B
+    ; ret nz
     ld a, [input]
     and BTN_B
-    jr z, .notGrinding
+    ret z
+    ; are we on a grindable surface?
+    ld a, [verticalPosition]
+    add a, 3
+    ld d, a
+    ld a, [rSCX]
+    add a, FIXED_X_POSITION + 5
+    ld e, a
+    call ResolveTileAddress
+    ld a, [hl]
+    cp 1
+    ret c
+    cp 5
+    ret nc
+    ; We are on a grindable surface and B has been pressed.
+    ld a, d
+    and a, 7  ; modulo 8
+    ld b, a
+    ld a, [verticalPosition]
+    sub a, b
+    add a, 4
+    ld [verticalPosition], a
+    ld a, [movementFlags]
+    or GRIND_FLAG
+    ld [movementFlags], a
+    ld a, SIGNED_BASELINE
+    ld [jumpVelocity], a
+    ret
+  .continueGrind
+    ld a, [input]
+    and BTN_B
+    jr z, .exitGrindWithOllie
       ld a, [verticalPosition]
       add a, 3
       ld d, a
@@ -84,17 +119,16 @@ CheckGrindInput:
       call ResolveTileAddress
       ld a, [hl]
       cp 2
-      jr c, .notGrinding
+      jr c, .exitGrind
       cp 5
-      jr nc, .notGrinding
-        ; We are on a grindable surface and B has been pressed.
-        ld a, [movementFlags]
-        or GRIND_FLAG
-        ld [movementFlags], a
-        ld a, SIGNED_BASELINE
-        ld [jumpVelocity], a
-        ret
-  .notGrinding
+      jr nc, .exitGrind
+      ret
+  .exitGrindWithOllie
+  ld a, SIGNED_BASELINE + 3
+  ld [jumpVelocity], a
+  ld a, 1
+  ld [airTimer], a
+  .exitGrind
   ld a, [movementFlags]
   ld b, a
   ld a, GRIND_FLAG
