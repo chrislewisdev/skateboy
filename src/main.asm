@@ -75,7 +75,12 @@ CheckGrindInput:
     ld a, [input]
     and BTN_B
     jr z, .notGrinding
-      ld c, 0
+      ld a, [verticalPosition]
+      add a, 3
+      ld d, a
+      ld a, [rSCX]
+      add a, FIXED_X_POSITION
+      ld e, a
       call ResolveTileAddress
       ld a, [hl]
       cp 2
@@ -116,12 +121,12 @@ CheckLanding:
   ld [verticalPosition], a
   ret
 
-; c = Y offset value
+; d = Y value
+; e = X value
 ; out hl = memory address of the player's
 ResolveTileAddress:
   ; What vertical row is the player on?
-  ld a, [verticalPosition]
-  sub a, c
+  ld a, d
   ld b, 8
   call DivideAB
   ld hl, MapData
@@ -135,8 +140,7 @@ ResolveTileAddress:
     jr nz, .untilRowSeekComplete
   .rowSeekComplete
   ; What horizontal column is the player on?
-  ld a, [rSCX]
-  add a, FIXED_X_POSITION
+  ld a, e
   ld b, 8
   call DivideAB
   ; the divide result is in c, set b to 0 so bc = c
@@ -145,7 +149,12 @@ ResolveTileAddress:
   ret
 
 CheckOnGround:
-  ld c, 1
+  ld a, [verticalPosition]
+  sub a, 1
+  ld d, a
+  ld a, [rSCX]
+  add a, FIXED_X_POSITION
+  ld e, a
   call ResolveTileAddress
   ld a, [hl]
   cp 17

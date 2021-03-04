@@ -38,8 +38,7 @@ CopyMemory::
 
 ; a = top of fraction
 ; b = bottom of fraction
-; return via c
-; (a / b)
+; out c = (a / b)
 DivideAB::
   ld c, 0
   .untilDivisionComplete
