@@ -21,6 +21,18 @@ GameLoop:
   call UpdateSprites
   call ScrollRight
   call ReadInput
+  ; update b hold timer (for grace window)
+  ld a, [input]
+  and BTN_B
+  jr z, .clearHoldTimer
+  .incrementHoldTimer
+    ld hl, grindGraceTimer
+    inc [hl]
+    jr .endHoldCheck
+  .clearHoldTimer
+    ld a, 0
+    ld [grindGraceTimer], a
+  .endHoldCheck
   call CheckOnGround
   jr nz, .notOnGround
   .onGround
@@ -49,6 +61,7 @@ InitState:
   ld [verticalPosition], a
   ld a, 0
   ld [movementFlags], a
+  ld [grindGraceTimer], a
 
 ScrollRight:
   ld a, [rSCX]
@@ -72,19 +85,21 @@ CheckGrindInput:
   and GRIND_FLAG
   jr nz, .continueGrind
   .initiateGrind
-    ; TODO increase the grace window for the grind before enabling this
-    ; ld a, [previousInput]
-    ; and BTN_B
-    ; ret nz
     ld a, [input]
     and BTN_B
     ret z
+    ; Allow grace period between pressing B and initiating the grind 
+    ld a, [grindGraceTimer]
+    cp 30
+    ret nc
+    inc a
+    ld [grindGraceTimer], a
     ; are we on a grindable surface?
     ld a, [verticalPosition]
     add a, 3
     ld d, a
     ld a, [rSCX]
-    add a, FIXED_X_POSITION + 5
+    add a, FIXED_X_POSITION + 4
     ld e, a
     call ResolveTileAddress
     ld a, [hl]
@@ -114,7 +129,7 @@ CheckGrindInput:
       add a, 3
       ld d, a
       ld a, [rSCX]
-      add a, FIXED_X_POSITION
+      add a, FIXED_X_POSITION - 5
       ld e, a
       call ResolveTileAddress
       ld a, [hl]

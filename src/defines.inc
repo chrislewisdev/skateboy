@@ -7,6 +7,7 @@ verticalPosition    EQU _RAM+4
 airTimer            EQU _RAM+5
 animationFlags      EQU _RAM+6
 movementFlags       EQU _RAM+7
+grindGraceTimer     EQU _RAM+8
 
 ; Input Constants
 BTN_DOWN      EQU %10000000
