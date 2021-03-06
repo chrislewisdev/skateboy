@@ -145,10 +145,7 @@ CheckGrindInput:
   ld [airTimer], a
   .exitGrind
   ld a, [movementFlags]
-  ld b, a
-  ld a, GRIND_FLAG
-  cpl
-  and a, b
+  and ~GRIND_FLAG
   ld [movementFlags], a
   ret
 
