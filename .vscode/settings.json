@@ -1,8 +1,8 @@
 {
-    "triggerTaskOnSave.tasks": {
-        "build": [
-            "*.asm",
-            "*.inc"
-        ],
-    },
+    // "triggerTaskOnSave.tasks": {
+    //     "build": [
+    //         "*.asm",
+    //         "*.inc"
+    //     ],
+    // },
 }

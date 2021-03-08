@@ -57,7 +57,7 @@ GameLoop:
 InitState:
   ld a, SIGNED_BASELINE
   ld [jumpVelocity], a
-  ld a, 113
+  ld a, 30
   ld [verticalPosition], a
   ld a, 0
   ld [movementFlags], a
@@ -65,7 +65,7 @@ InitState:
 
 ScrollRight:
   ld a, [rSCX]
-  add a, 2
+  add a, 1
   ld [rSCX], a
   ret
 
@@ -103,7 +103,7 @@ CheckGrindInput:
     ld e, a
     call ResolveTileAddress
     ld a, [hl]
-    cp 1
+    cp 2
     ret c
     cp 5
     ret nc
@@ -177,7 +177,8 @@ ResolveTileAddress:
   call DivideAB
   ld hl, MapData
   ld a, c
-  ld bc, 32
+  ; TODO account for variable map widths somehow
+  ld bc, MapWidth
   or a
   jr z, .rowSeekComplete
   .untilRowSeekComplete

@@ -20,6 +20,21 @@ ANMT_HEAD     EQU %00000001
 ANMT_LEGS     EQU %00000010
 
 SECTION "Graphics functions", ROM0
+
+TileData:
+INCBIN "data/tiles.bin"
+SpriteData:
+INCBIN "data/sprites.bin"
+EndGfxData:
+
+MapData::
+INCBIN "data/grand-st-mall.bin"
+EndMapData::
+
+MapHeight   EQU 18
+MapWidth    EQU (EndMapData - MapData) / MapHeight
+EXPORT MapHeight, MapWidth
+
 InitGraphics::
   ; Wait until vblank, disable screen so we can initialise things
   call WaitForNextVerticalBlank
@@ -44,10 +59,10 @@ InitGraphics::
   ld bc, EndGfxData - TileData
   call CopyMemory
   ; Copy tilemap data
-  ld hl, _SCRN0
-  ld de, MapData
-  ld bc, EndMapData - MapData
-  call CopyMemory
+  ; ld hl, _SCRN0
+  ; ld de, MapData
+  ; ld bc, EndMapData - MapData
+  call CopyMapData
   ; Set up sprite to display on screen
   call InitSprites
   call UpdateSprites
@@ -177,12 +192,31 @@ AnimateLegs:
   .endSpriteSwap
   ret
 
-TileData:
-INCBIN "data/tiles.bin"
-SpriteData:
-INCBIN "data/sprites.bin"
-EndGfxData:
+CopyMapData:
+  ld de, _SCRN0
+  ld hl, MapData
+REPT MapHeight
+  ld bc, 32
+  push hl
+  call CopyGfxMemory
+  pop hl
+  ld bc, MapWidth
+  add hl, bc
+ENDR
+  ret
 
-MapData::
-INCBIN "data/sample-map.bin"
-EndMapData::
+; implementation of CopyMemory that flips hl/de usage
+; de = destination address
+; hl = source address
+; bc = no. bytes to copy
+CopyGfxMemory::
+.untilAllDataIsCopied
+  ld a, [hl]
+  ld [de], a
+  inc hl
+  inc de
+  dec bc
+  ld a, b
+  or c
+jr nz, .untilAllDataIsCopied
+ret
