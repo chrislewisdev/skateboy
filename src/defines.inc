@@ -11,6 +11,7 @@ grindGraceTimer     EQU _RAM+8
 loadTriggerCounter  EQU _RAM+9
 mapLoadIndex        EQU _RAM+10
 mapInsertIndex      EQU _RAM+11
+mapProgressIndex    EQU _RAM+12
 
 ; Input Constants
 BTN_DOWN      EQU %10000000

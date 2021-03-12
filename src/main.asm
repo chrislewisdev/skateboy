@@ -1,7 +1,7 @@
 INCLUDE "hardware.inc"
 INCLUDE "defines.inc"
 
-SPEED EQU 2
+SPEED EQU 1
 
 SECTION "ROM Title", ROM0[$0134]
   DB "Skateboy"
@@ -113,6 +113,7 @@ CheckGrindInput:
     add a, 3
     ld d, a
     ld a, [rSCX]
+    and 7 ; modulo 8
     add a, FIXED_X_POSITION + 4
     ld e, a
     call ResolveTileAddress
@@ -143,6 +144,7 @@ CheckGrindInput:
       add a, 3
       ld d, a
       ld a, [rSCX]
+      and 7 ; modulo 8
       add a, FIXED_X_POSITION - 5
       ld e, a
       call ResolveTileAddress
@@ -201,10 +203,19 @@ ResolveTileAddress:
     jr nz, .untilRowSeekComplete
   .rowSeekComplete
   ; What horizontal column is the player on?
+  ; TODO clean up the relationship between progress index and 
+  ; this math here..........
   ld a, e
   ld b, 8
   call DivideAB
   ; the divide result is in c, set b to 0 so bc = c
+  ld a, [mapProgressIndex]
+  add a, c
+  cp MapWidth
+  jr c, .inHorizontalBounds
+    sub MapWidth
+  .inHorizontalBounds
+  ld c, a
   ld b, 0
   add hl, bc
   ret
@@ -214,6 +225,7 @@ CheckOnGround:
   sub a, 1
   ld d, a
   ld a, [rSCX]
+  and 7 ; modulo 8
   add a, FIXED_X_POSITION
   ld e, a
   call ResolveTileAddress

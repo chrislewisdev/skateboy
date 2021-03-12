@@ -76,6 +76,7 @@ InitGraphics::
   ld [rSCX], a
   ld [rSCY], a
   ld [mapInsertIndex], a
+  ld [mapProgressIndex], a
   ld a, 32
   ld [mapLoadIndex], a
   ; Turn display back on
@@ -247,8 +248,9 @@ ENDR
   ; Update indices
   ld a, [mapInsertIndex]
   inc a
-  and 31 ; module 32
+  and 31 ; modulo 32
   ld [mapInsertIndex], a
+
   ld a, [mapLoadIndex]
   inc a
   cp MapWidth
@@ -256,6 +258,15 @@ ENDR
     ld a, 0
   .doNotResetLoadIndex
   ld [mapLoadIndex], a
+
+  ; TODO reconsider if we can track progress a better way
+  ld a, [mapProgressIndex]
+  inc a
+  cp MapWidth
+  jr nz, .doNotResetProgressIndex
+    ld a, 0
+  .doNotResetProgressIndex
+  ld [mapProgressIndex], a
   ret
 
 ; implementation of CopyMemory that flips hl/de usage
