@@ -8,6 +8,9 @@ airTimer            EQU _RAM+5
 animationFlags      EQU _RAM+6
 movementFlags       EQU _RAM+7
 grindGraceTimer     EQU _RAM+8
+loadTriggerCounter  EQU _RAM+9
+mapLoadIndex        EQU _RAM+10
+mapInsertIndex      EQU _RAM+11
 
 ; Input Constants
 BTN_DOWN      EQU %10000000

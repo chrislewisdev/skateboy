@@ -75,6 +75,9 @@ InitGraphics::
   ld a, 0
   ld [rSCX], a
   ld [rSCY], a
+  ld [mapInsertIndex], a
+  ld a, 32
+  ld [mapLoadIndex], a
   ; Turn display back on
   ld a, LCDCF_ON|LCDCF_BG8000|LCDCF_BG9800|LCDCF_BGON|LCDCF_WINOFF|LCDCF_OBJ8|LCDCF_OBJON
   ld [rLCDC], a
@@ -203,6 +206,56 @@ REPT MapHeight
   ld bc, MapWidth
   add hl, bc
 ENDR
+  ret
+
+LoadNewMapColumn::
+  ; Determine where to place our new column data
+  ld a, [mapInsertIndex]
+  ld hl, _SCRN0
+  ld b, 0
+  ld c, a
+  add hl, bc
+  ld d, h
+  ld e, l
+  ; Where are we up to in the level?
+  ld a, [mapLoadIndex]
+  ld hl, MapData
+  ld b, 0
+  ld c, a
+  add hl, bc
+  ld b, h
+  ld c, l
+  ; Copy the full column
+REPT MapHeight
+  ld a, [bc]
+  ld [de], a
+  ld h, b
+  ld l, c
+  ld b, 0
+  ld c, MapWidth
+  add hl, bc
+  ld b, h
+  ld c, l
+  ld h, d
+  ld l, e
+  ld d, 0
+  ld e, 32
+  add hl, de
+  ld d, h
+  ld e, l
+ENDR
+  ; Update indices
+  ld a, [mapInsertIndex]
+  inc a
+  and 31 ; module 32
+  ld [mapInsertIndex], a
+  ld a, [mapLoadIndex]
+  inc a
+  cp MapWidth
+  jr nz, .doNotResetLoadIndex
+    ld a, 0
+  .doNotResetLoadIndex
+  ld [mapLoadIndex], a
   ret
 
 ; implementation of CopyMemory that flips hl/de usage

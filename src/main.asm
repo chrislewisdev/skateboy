@@ -1,6 +1,8 @@
 INCLUDE "hardware.inc"
 INCLUDE "defines.inc"
 
+SPEED EQU 2
+
 SECTION "ROM Title", ROM0[$0134]
   DB "Skateboy"
 
@@ -62,12 +64,24 @@ InitState:
   ld a, 0
   ld [movementFlags], a
   ld [grindGraceTimer], a
+  ld a, 8
+  ld [loadTriggerCounter], a
 
 ScrollRight:
   ld a, [rSCX]
-  add a, 1
+  add a, SPEED
   ld [rSCX], a
-  ret
+  ; Can we load a new column now?
+  ld a, [loadTriggerCounter]
+  sub SPEED
+  jr nc, .doNotLoadNewColumn
+    add a, 8
+    ld [loadTriggerCounter], a
+    call LoadNewMapColumn
+    ret
+  .doNotLoadNewColumn
+    ld [loadTriggerCounter], a
+    ret
 
 CheckJumpInput:
   ld a, [previousInput]
