@@ -1,7 +1,7 @@
 INCLUDE "hardware.inc"
 INCLUDE "defines.inc"
 
-SPEED EQU 1
+SPEED EQU 7
 
 SECTION "ROM Title", ROM0[$0134]
   DB "Skateboy"
@@ -64,7 +64,7 @@ InitState:
   ld a, 0
   ld [movementFlags], a
   ld [grindGraceTimer], a
-  ld a, 8
+  ld a, 16
   ld [loadTriggerCounter], a
 
 ScrollRight:
