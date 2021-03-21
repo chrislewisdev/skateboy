@@ -1,7 +1,7 @@
 INCLUDE "hardware.inc"
 INCLUDE "defines.inc"
 
-SPEED EQU 7
+SPEED EQU 2
 
 SECTION "ROM Title", ROM0[$0134]
   DB "Skateboy"
@@ -19,7 +19,8 @@ Startup:
   call InitGraphics
 GameLoop:
   call WaitForNextVerticalBlank
-  call DetermineAnimationFrames
+  ; commented out while re-jigging sprites to 32x32
+  ; call DetermineAnimationFrames
   call UpdateSprites
   call ScrollRight
   call ReadInput

@@ -9,7 +9,7 @@ SECTION "Graphics functions", ROM0
 TileData:
 INCBIN "data/tiles.bin"
 SpriteData:
-INCBIN "data/sprites.bin"
+INCBIN "data/sprites32.bin"
 EndGfxData:
 
 MapData::
@@ -86,35 +86,89 @@ InitGraphics::
 
 UpdateSprites::
   ; set X values first
-  ld a, FIXED_X_POSITION
-  ld [SPR0_X], a     ; top-left
-  ld [SPR1_X], a     ; bottom-left
-  add a, 8
-  ld [SPR2_X], a     ; top-right
-  ld [SPR3_X], a    ; bottom-right
+  ; ld b, b
+X = 0
+REPT 4
+  ld a, FIXED_X_POSITION + (X * 8)
+Y = 0
+REPT 4
+  ld [SPR0_X + (X * 4) + (Y * 16)], a
+Y = Y + 1
+ENDR
+X = X + 1
+ENDR
+  ; ld a, FIXED_X_POSITION
+  ; ld [SPR0_X], a     ; top-left
+  ; ld [SPR1_X], a     ; bottom-left
+  ; add a, 8
+  ; ld [SPR2_X], a     ; top-right
+  ; ld [SPR3_X], a    ; bottom-right
 
-  ; set Y values
   ld a, [verticalPosition]
-  ld [SPR0_Y], a       ; top-left
-  ld [SPR2_Y], a     ; top-right
+Y = 0
+REPT 4
+X = 0
+REPT 4
+  ld [SPR0_Y + (X * 4) + (Y * 16)], a
+X = X + 1
+ENDR
   add a, 8
-  ld [SPR1_Y], a     ; bottom-left
-  ld [SPR3_Y], a    ; bottom-right
+Y = Y + 1
+ENDR
+  ; set Y values
+  ; ld a, [verticalPosition]
+  ; ld [SPR0_Y], a       ; top-left
+  ; ld [SPR2_Y], a     ; top-right
+  ; add a, 8
+  ; ld [SPR1_Y], a     ; bottom-left
+  ; ld [SPR3_Y], a    ; bottom-right
   ret
 
 InitSprites:
-  ; top-left
-  ld a, SKTR_HEAD_A_FRAME0
+; COUNTER = 0
+; REPT 16
+; X = (COUNTER % 4 % 2)
+; Y = (COUNTER % 4 % 2) + 1
+;   ld a, SKTR_BASE_FRAME + COUNTER
+;   ld [SPR0_ID + (X * 4) + (Y * 16)], a
+; COUNTER = COUNTER + 1
+; ENDR
+  ld a, SKTR_BASE_FRAME
   ld [SPR0_ID], a
-  ; bottom-left
-  ld a, SKTR_LEG_A_FRAME0
-  ld [SPR1_ID], a
-  ; top-right
-  ld a, SKTR_HEAD_B_FRAME0
-  ld [SPR2_ID], a
-  ; bottom-right
-  ld a, SKTR_LEG_B_FRAME0
-  ld [SPR3_ID], a
+  inc a
+  ld [SPR0_ID + 16], a
+  inc a
+  ld [SPR0_ID + 4], a
+  inc a
+  ld [SPR0_ID + 4 + 16], a
+  inc a
+  ld [SPR0_ID + 32], a
+  inc a
+  ld [SPR0_ID + 48], a
+  inc a
+  ld [SPR0_ID + 32 + 4], a 
+  inc a
+  ld [SPR0_ID + 48 + 4], a
+  inc a
+  ld [SPR0_ID + 8], a
+  inc a
+  ld [SPR0_ID + 8 + 16], a
+  inc a
+  ld [SPR0_ID + 12], a
+  inc a
+  ld [SPR0_ID + 12 + 16], a
+  inc a
+  ld [SPR0_ID + 8 + 32],a
+  inc a
+  ld [SPR0_ID + 8 + 48], a
+  inc a
+  ld [SPR0_ID + 12 + 32], a
+  inc a
+  ld [SPR0_ID + 12 + 48], a
+;   ld a, SKTR_BASE_FRAME + COUNTER
+;   ld [SPR0_ID + (4 * COUNTER)], a
+; COUNTER = COUNTER + 1
+; ENDR
   ret
 
 DetermineAnimationFrames::
