@@ -91,7 +91,7 @@ CheckJumpInput:
     ld a, [input]
     and BTN_A
     ret z
-      ld a, SIGNED_BASELINE + 3
+      ld a, SIGNED_BASELINE + 5
       ld [jumpVelocity], a
   ret
 
@@ -111,7 +111,7 @@ CheckGrindInput:
     ld [grindGraceTimer], a
     ; are we on a grindable surface?
     ld a, [verticalPosition]
-    add a, 3
+    add a, 19
     ld d, a
     ld a, [rSCX]
     and 7 ; modulo 8
@@ -142,7 +142,7 @@ CheckGrindInput:
     and BTN_B
     jr z, .exitGrindWithOllie
       ld a, [verticalPosition]
-      add a, 3
+      add a, 19
       ld d, a
       ld a, [rSCX]
       and 7 ; modulo 8
@@ -176,7 +176,7 @@ CheckLanding:
   ld [jumpVelocity], a
   ; Adjust the player to rest exactly on top of the ground tile
   ld a, [verticalPosition]
-  sub a, 1
+  add a, 16
   and 7 ; modulo 8
   ld b, a
   ld a, [verticalPosition]
@@ -223,7 +223,7 @@ ResolveTileAddress:
 
 CheckOnGround:
   ld a, [verticalPosition]
-  sub a, 1
+  add a, 16
   ld d, a
   ld a, [rSCX]
   and 7 ; modulo 8
@@ -246,11 +246,11 @@ DecayVelocity:
   ret nz
   ; only do every 4 frames once in air
   ld a, [airTimer]
-  and 3 ; modulo 4
+  and 2 ; modulo 4
   ret nz
   ld a, [jumpVelocity]
   dec a
-  cp SIGNED_BASELINE - 3
+  cp SIGNED_BASELINE - 4
   ret c
   ld [jumpVelocity], a
   ret
