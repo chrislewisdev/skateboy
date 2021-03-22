@@ -13,7 +13,7 @@ INCBIN "data/sprites32.bin"
 EndGfxData:
 
 MapData::
-INCBIN "data/grand-st-mall.bin"
+INCBIN "data/sample-map.bin"
 EndMapData::
 
 MapHeight   EQU 18
@@ -77,7 +77,7 @@ InitGraphics::
   ld [rSCY], a
   ld [mapInsertIndex], a
   ld [mapProgressIndex], a
-  ld a, 32
+  ld a, 32 % MapWidth
   ld [mapLoadIndex], a
   ; Turn display back on
   ld a, LCDCF_ON|LCDCF_BG8000|LCDCF_BG9800|LCDCF_BGON|LCDCF_WINOFF|LCDCF_OBJ8|LCDCF_OBJON
