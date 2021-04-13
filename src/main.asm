@@ -1,7 +1,7 @@
 INCLUDE "hardware.inc"
 INCLUDE "defines.inc"
 
-SPEED EQU 2
+SPEED EQU 3
 
 SECTION "ROM Title", ROM0[$0134]
   DB "Skateboy"
@@ -156,7 +156,7 @@ CheckGrindInput:
       jr nc, .exitGrind
       ret
   .exitGrindWithOllie
-  ld a, SIGNED_BASELINE + 3
+  ld a, SIGNED_BASELINE + 5
   ld [jumpVelocity], a
   ld a, 1
   ld [airTimer], a
