@@ -9,7 +9,7 @@ SECTION "Graphics functions", ROM0
 TileData:
 INCBIN "data/tiles.bin"
 SpriteData:
-INCBIN "data/sprites.bin"
+INCBIN "gfx/sprites24.2bpp"
 EndGfxData:
 
 MapData::
