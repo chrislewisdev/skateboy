@@ -19,7 +19,7 @@ Startup:
   call InitGraphics
 GameLoop:
   call WaitForNextVerticalBlank
-  call DetermineAnimationFrames
+  ; call DetermineAnimationFrames
   call UpdateSprites
   call ScrollRight
   call ReadInput
@@ -110,7 +110,7 @@ CheckGrindInput:
     ld [grindGraceTimer], a
     ; are we on a grindable surface?
     ld a, [verticalPosition]
-    add a, 3
+    add a, 11
     ld d, a
     ld a, [rSCX]
     and 7 ; modulo 8
@@ -141,7 +141,7 @@ CheckGrindInput:
     and BTN_B
     jr z, .exitGrindWithOllie
       ld a, [verticalPosition]
-      add a, 3
+      add a, 11
       ld d, a
       ld a, [rSCX]
       and 7 ; modulo 8
@@ -222,7 +222,7 @@ ResolveTileAddress:
 
 CheckOnGround:
   ld a, [verticalPosition]
-  sub a, 1
+  add a, 8
   ld d, a
   ld a, [rSCX]
   and 7 ; modulo 8

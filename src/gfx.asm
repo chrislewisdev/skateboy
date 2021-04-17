@@ -86,35 +86,67 @@ InitGraphics::
 
 UpdateSprites::
   ; set X values first
-  ld a, FIXED_X_POSITION
-  ld [SPR0_X], a     ; top-left
-  ld [SPR1_X], a     ; bottom-left
-  add a, 8
-  ld [SPR2_X], a     ; top-right
-  ld [SPR3_X], a    ; bottom-right
+  ; ld a, FIXED_X_POSITION
+  ; ld [SPR0_X], a     ; top-left
+  ; ld [SPR1_X], a     ; bottom-left
+  ; add a, 8
+  ; ld [SPR2_X], a     ; top-right
+  ; ld [SPR3_X], a    ; bottom-right
+
+X = 0
+REPT 3
+  ld a, FIXED_X_POSITION + X*8
+Y = 0
+REPT 3
+  ld [SPR0_X + 4 * (X + Y*3)], a
+Y = Y + 1
+ENDR
+X = X + 1
+ENDR
 
   ; set Y values
+  ; ld a, [verticalPosition]
+  ; ld [SPR0_Y], a       ; top-left
+  ; ld [SPR2_Y], a     ; top-right
+  ; add a, 8
+  ; ld [SPR1_Y], a     ; bottom-left
+  ; ld [SPR3_Y], a    ; bottom-right
+Y = 0
+REPT 3
   ld a, [verticalPosition]
-  ld [SPR0_Y], a       ; top-left
-  ld [SPR2_Y], a     ; top-right
-  add a, 8
-  ld [SPR1_Y], a     ; bottom-left
-  ld [SPR3_Y], a    ; bottom-right
+  add a, Y*8
+X = 0
+REPT 3
+  ld [SPR0_Y + 4 * (X + Y*3)], a
+X = X + 1
+ENDR
+Y = Y + 1
+ENDR
   ret
 
 InitSprites:
-  ; top-left
-  ld a, SKTR_HEAD_A_FRAME0
-  ld [SPR0_ID], a
-  ; bottom-left
-  ld a, SKTR_LEG_A_FRAME0
-  ld [SPR1_ID], a
-  ; top-right
-  ld a, SKTR_HEAD_B_FRAME0
-  ld [SPR2_ID], a
-  ; bottom-right
-  ld a, SKTR_LEG_B_FRAME0
-  ld [SPR3_ID], a
+  ; ; top-left
+  ; ld a, SKTR_HEAD_A_FRAME0
+  ; ld [SPR0_ID], a
+  ; ; bottom-left
+  ; ld a, SKTR_LEG_A_FRAME0
+  ; ld [SPR1_ID], a
+  ; ; top-right
+  ; ld a, SKTR_HEAD_B_FRAME0
+  ; ld [SPR2_ID], a
+  ; ; bottom-right
+  ; ld a, SKTR_LEG_B_FRAME0
+  ; ld [SPR3_ID], a
+Y = 0
+REPT 3
+X = 0
+REPT 3
+  ld a, SKTR_BASE_FRAME + X + Y*3
+  ld [SPR0_ID + 4 * (X + Y*3)], a
+X = X + 1
+ENDR
+Y = Y + 1
+ENDR
   ret
 
 DetermineAnimationFrames::
