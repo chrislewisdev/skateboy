@@ -89,6 +89,7 @@ UpdateGraphics::
   ret
 
 ScrollRight:
+  ; TODO: Load from a state variable
   ld a, [rSCX]
   add a, SPEED
   ld [rSCX], a

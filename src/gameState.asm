@@ -16,6 +16,7 @@ InitGameState::
 
 UpdateGameState::
   call ReadInput
+  ; TODO: UpdateMovementFlags (ground, grinding)
   ; update b hold timer (for grace window)
   ld a, [input]
   and BTN_B
@@ -31,19 +32,21 @@ UpdateGameState::
   call CheckOnGround
   jr nz, .notOnGround
   .onGround
+    ; TODO: PerformGroundChecks
     ld a, 0
     ld [airTimer], a
     call CheckJumpInput
     call CheckLanding
     jr .endOfGroundCheck
   .notOnGround
+    ; TODO: PerformAirChecks
     ld a, [airTimer]
     inc a
     ld [airTimer], a
     call CheckGrindInput
     call DecayVelocity
   .endOfGroundCheck
-  call EvaluateVelocity
+  call ApplyVelocity
   ret
 
 CheckJumpInput:
@@ -217,7 +220,7 @@ DecayVelocity:
   ld [jumpVelocity], a
   ret
 
-EvaluateVelocity:
+ApplyVelocity:
   ld a, [jumpVelocity]
   ld d, a
   cp SIGNED_BASELINE
