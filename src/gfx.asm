@@ -4,6 +4,8 @@ INCLUDE "defines.inc"
 ANMT_HEAD     EQU %00000001
 ANMT_LEGS     EQU %00000010
 
+SPEED EQU 2
+
 SECTION "Graphics functions", ROM0
 
 TileData:
@@ -58,10 +60,6 @@ InitGraphics::
   ld de, TileData
   ld bc, EndGfxData - TileData
   call CopyMemory
-  ; Copy tilemap data
-  ; ld hl, _SCRN0
-  ; ld de, MapData
-  ; ld bc, EndMapData - MapData
   call CopyMapData
   ; Set up sprite to display on screen
   call InitSprites
@@ -83,6 +81,28 @@ InitGraphics::
   ld a, LCDCF_ON|LCDCF_BG8000|LCDCF_BG9800|LCDCF_BGON|LCDCF_WINOFF|LCDCF_OBJ8|LCDCF_OBJON
   ld [rLCDC], a
   ret
+
+UpdateGraphics::
+  call DetermineAnimationFrames
+  call UpdateSprites
+  call ScrollRight
+  ret
+
+ScrollRight:
+  ld a, [rSCX]
+  add a, SPEED
+  ld [rSCX], a
+  ; Can we load a new column now?
+  ld a, [loadTriggerCounter]
+  sub SPEED
+  jr nc, .doNotLoadNewColumn
+    add a, 8
+    ld [loadTriggerCounter], a
+    call LoadNewMapColumn
+    ret
+  .doNotLoadNewColumn
+    ld [loadTriggerCounter], a
+    ret
 
 UpdateSprites::
   ; set X values first
