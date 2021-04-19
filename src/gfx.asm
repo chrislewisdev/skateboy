@@ -104,7 +104,7 @@ ScrollRight:
     ld [loadTriggerCounter], a
     ret
 
-UpdateSprites::
+UpdateSprites:
   ; set X values first
   ld a, FIXED_X_POSITION
   ld [SPR0_X], a     ; top-left
@@ -137,7 +137,7 @@ InitSprites:
   ld [SPR3_ID], a
   ret
 
-DetermineAnimationFrames::
+DetermineAnimationFrames:
   ; Process two-frame animation flags
   ld a, [frameCounter]
   ld b, a
@@ -229,7 +229,7 @@ REPT MapHeight
 ENDR
   ret
 
-LoadNewMapColumn::
+LoadNewMapColumn:
   ; Determine where to place our new column data
   ld a, [mapInsertIndex]
   ld hl, _SCRN0
@@ -293,7 +293,7 @@ ENDR
 ; de = destination address
 ; hl = source address
 ; bc = no. bytes to copy
-CopyGfxMemory::
+CopyGfxMemory:
 .untilAllDataIsCopied
   ld a, [hl]
   ld [de], a
