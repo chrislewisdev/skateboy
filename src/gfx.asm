@@ -22,6 +22,20 @@ MapHeight   EQU 18
 MapWidth    EQU (EndMapData - MapData) / MapHeight
 EXPORT MapHeight, MapWidth
 
+; Sprite references
+SPR0_Y      EQU _OAMRAM
+SPR0_X      EQU _OAMRAM+1
+SPR0_ID     EQU _OAMRAM+2
+SPR1_Y      EQU _OAMRAM+4
+SPR1_X      EQU _OAMRAM+5
+SPR1_ID     EQU _OAMRAM+6
+SPR2_Y      EQU _OAMRAM+8
+SPR2_X      EQU _OAMRAM+9
+SPR2_ID     EQU _OAMRAM+10
+SPR3_Y      EQU _OAMRAM+12
+SPR3_X      EQU _OAMRAM+13
+SPR3_ID     EQU _OAMRAM+14
+
 ; Frame indices for the skater animations
 SKTR_BASE_FRAME       EQU (SpriteData - TileData) / 16
 SKTR_HEAD_A_FRAME0    EQU SKTR_BASE_FRAME

@@ -9,6 +9,7 @@ OLLIE_FORCE       EQU SIGNED_BASELINE + 3
 FALL_SPEED_LIMIT  EQU SIGNED_BASELINE - 3
 GRIND_TILE_START  EQU 2
 GRIND_TILE_END    EQU 5
+GRIND_GRACE_LIMIT EQU 30
 
 InitGameState::
   ld a, SIGNED_BASELINE
@@ -24,7 +25,11 @@ InitGameState::
 UpdateGameState::
   call ReadInput
   call CheckOnGround
-  ; update b hold timer (for grace window)
+  call UpdateGrindGraceTimer
+  call UpdatePlayer
+  ret
+
+UpdateGrindGraceTimer:
   ld a, [input]
   and BTN_B
   jr z, .clearHoldTimer
@@ -36,7 +41,6 @@ UpdateGameState::
     ld a, 0
     ld [grindGraceTimer], a
   .endHoldCheck
-  call UpdatePlayer
   ret
 
 UpdatePlayer:
@@ -88,7 +92,7 @@ CheckGrindInput:
     ret z
     ; Allow grace period between pressing B and initiating the grind 
     ld a, [grindGraceTimer]
-    cp 30
+    cp GRIND_GRACE_LIMIT
     ret nc
     inc a
     ld [grindGraceTimer], a
@@ -107,6 +111,7 @@ CheckGrindInput:
     cp GRIND_TILE_END
     ret nc
     ; We are on a grindable surface and B has been pressed.
+    ; First align the player to the tile so they appear flush on the rail
     ld a, d
     and a, 7  ; modulo 8
     ld b, a
@@ -114,6 +119,7 @@ CheckGrindInput:
     sub a, b
     add a, 4
     ld [verticalPosition], a
+    ; Set the grind flag and halt vertical movement
     ld a, [movementFlags]
     or GRIND_FLAG
     ld [movementFlags], a
