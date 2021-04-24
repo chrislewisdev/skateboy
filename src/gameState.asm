@@ -3,6 +3,13 @@ INCLUDE "defines.inc"
 
 SECTION "Game state logic", ROM0
 
+TILE_SIZE         EQU 8
+GROUND_TILE       EQU 17
+OLLIE_FORCE       EQU SIGNED_BASELINE + 3
+FALL_SPEED_LIMIT  EQU SIGNED_BASELINE - 3
+GRIND_TILE_START  EQU 2
+GRIND_TILE_END    EQU 5
+
 InitGameState::
   ld a, SIGNED_BASELINE
   ld [jumpVelocity], a
@@ -16,7 +23,7 @@ InitGameState::
 
 UpdateGameState::
   call ReadInput
-  ; TODO: UpdateMovementFlags (ground, grinding)
+  call CheckOnGround
   ; update b hold timer (for grace window)
   ld a, [input]
   and BTN_B
@@ -29,24 +36,35 @@ UpdateGameState::
     ld a, 0
     ld [grindGraceTimer], a
   .endHoldCheck
-  call CheckOnGround
-  jr nz, .notOnGround
+  call UpdatePlayer
+  ret
+
+UpdatePlayer:
+  ld a, [movementFlags]
+  and GROUND_FLAG
+  jr z, .notOnGround
   .onGround
-    ; TODO: PerformGroundChecks
-    ld a, 0
-    ld [airTimer], a
-    call CheckJumpInput
-    call CheckLanding
+    call PerformGroundChecks
     jr .endOfGroundCheck
   .notOnGround
-    ; TODO: PerformAirChecks
-    ld a, [airTimer]
-    inc a
-    ld [airTimer], a
-    call CheckGrindInput
-    call DecayVelocity
+    call PerformAirChecks
   .endOfGroundCheck
   call ApplyVelocity
+  ret
+
+PerformGroundChecks:
+  ld a, 0
+  ld [airTimer], a
+  call CheckJumpInput
+  call CheckLanding
+  ret
+
+PerformAirChecks:
+  ld a, [airTimer]
+  inc a
+  ld [airTimer], a
+  call CheckGrindInput
+  call DecayVelocity
   ret
 
 CheckJumpInput:
@@ -56,7 +74,7 @@ CheckJumpInput:
     ld a, [input]
     and BTN_A
     ret z
-      ld a, SIGNED_BASELINE + 3
+      ld a, OLLIE_FORCE
       ld [jumpVelocity], a
   ret
 
@@ -84,9 +102,9 @@ CheckGrindInput:
     ld e, a
     call ResolveTileAddress
     ld a, [hl]
-    cp 2
+    cp GRIND_TILE_START
     ret c
-    cp 5
+    cp GRIND_TILE_END
     ret nc
     ; We are on a grindable surface and B has been pressed.
     ld a, d
@@ -115,13 +133,13 @@ CheckGrindInput:
       ld e, a
       call ResolveTileAddress
       ld a, [hl]
-      cp 2
+      cp GRIND_TILE_START
       jr c, .exitGrind
-      cp 5
+      cp GRIND_TILE_END
       jr nc, .exitGrind
       ret
   .exitGrindWithOllie
-  ld a, SIGNED_BASELINE + 3
+  ld a, OLLIE_FORCE
   ld [jumpVelocity], a
   ld a, 1
   ld [airTimer], a
@@ -155,7 +173,7 @@ CheckLanding:
 ResolveTileAddress:
   ; What vertical row is the player on?
   ld a, d
-  ld b, 8
+  ld b, TILE_SIZE
   call DivideAB
   ld hl, MapData
   ld a, c
@@ -172,7 +190,7 @@ ResolveTileAddress:
   ; TODO clean up the relationship between progress index and 
   ; this math here..........
   ld a, e
-  ld b, 8
+  ld b, TILE_SIZE
   call DivideAB
   ; the divide result is in c, set b to 0 so bc = c
   ld a, [mapProgressIndex]
@@ -196,13 +214,17 @@ CheckOnGround:
   ld e, a
   call ResolveTileAddress
   ld a, [hl]
-  cp 17
+  cp GROUND_TILE
   jr nz, .notOnGround
   .onGround
-    ld a, 1
+    ld a, [movementFlags]
+    or GROUND_FLAG
+    ld [movementFlags], a
     ret
   .notOnGround
-    ld a, 0
+    ld a, [movementFlags]
+    and ~GROUND_FLAG
+    ld [movementFlags], a
     ret
 
 DecayVelocity:
@@ -215,7 +237,7 @@ DecayVelocity:
   ret nz
   ld a, [jumpVelocity]
   dec a
-  cp SIGNED_BASELINE - 3
+  cp FALL_SPEED_LIMIT
   ret c
   ld [jumpVelocity], a
   ret
