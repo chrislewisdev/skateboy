@@ -139,7 +139,7 @@ CheckGrindInput:
       ld d, a
       ld a, [rSCX]
       and 7 ; modulo 8
-      add a, FIXED_X_POSITION - 5
+      add a, FIXED_X_POSITION
       ld e, a
       call ResolveTileAddress
       ld a, [hl]
