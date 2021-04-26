@@ -10,6 +10,10 @@ FALL_SPEED_LIMIT  EQU SIGNED_BASELINE - 3
 GRIND_TILE_START  EQU 2
 GRIND_TILE_END    EQU 5
 GRIND_GRACE_LIMIT EQU 30
+SPRITE_SIZE       EQU 32
+SCREEN_Y_BASE     EQU 16
+SPRITE_Y_OFFSET   EQU 2
+GRIND_CLEARANCE   EQU 3
 
 InitGameState::
   ld a, SIGNED_BASELINE
@@ -98,7 +102,7 @@ CheckGrindInput:
     ld [grindGraceTimer], a
     ; are we on a grindable surface?
     ld a, [verticalPosition]
-    add a, 3
+    add a, SPRITE_SIZE - SCREEN_Y_BASE + GRIND_CLEARANCE
     ld d, a
     ld a, [rSCX]
     and 7 ; modulo 8
@@ -117,7 +121,7 @@ CheckGrindInput:
     ld b, a
     ld a, [verticalPosition]
     sub a, b
-    add a, 4
+    add a, GRIND_CLEARANCE + SPRITE_Y_OFFSET
     ld [verticalPosition], a
     ; Set the grind flag and halt vertical movement
     ld a, [movementFlags]
@@ -131,7 +135,7 @@ CheckGrindInput:
     and BTN_B
     jr z, .exitGrindWithOllie
       ld a, [verticalPosition]
-      add a, 3
+      add a, SPRITE_SIZE - SCREEN_Y_BASE + GRIND_CLEARANCE
       ld d, a
       ld a, [rSCX]
       and 7 ; modulo 8
@@ -165,7 +169,7 @@ CheckLanding:
   ld [jumpVelocity], a
   ; Adjust the player to rest exactly on top of the ground tile
   ld a, [verticalPosition]
-  sub a, 1
+  add a, SPRITE_SIZE - SCREEN_Y_BASE - SPRITE_Y_OFFSET
   and 7 ; modulo 8
   ld b, a
   ld a, [verticalPosition]
@@ -212,7 +216,7 @@ ResolveTileAddress:
 
 CheckOnGround:
   ld a, [verticalPosition]
-  sub a, 1
+  add a, SPRITE_SIZE - SCREEN_Y_BASE - SPRITE_Y_OFFSET
   ld d, a
   ld a, [rSCX]
   and 7 ; modulo 8

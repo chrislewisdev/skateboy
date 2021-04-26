@@ -1,5 +1,7 @@
 SRCDIR = src
 OUTDIR = build
+GENDIR = gen
+GFXDIR = gfx
 
 BIN = $(wildcard $(SRCDIR)/**/*.bin)
 INC = $(wildcard $(SRCDIR)/*.inc)
@@ -13,5 +15,24 @@ $(OUTDIR)/skateboy.gb: $(OBJ)
 $(OUTDIR)/%.o: $(SRCDIR)/%.asm $(INC) $(BIN) $(OUTDIR)/
 	rgbasm -i $(SRCDIR) -o $@ $<
 
+$(OUTDIR)/gfx.o: $(SRCDIR)/$(GENDIR)/sprites.2bpp
+
+$(SRCDIR)/$(GENDIR)/sprites.2bpp: $(GENDIR)/sprites.png $(SRCDIR)/$(GENDIR)/
+	rgbgfx -o $@ $<
+
+$(GENDIR)/sprites.png: $(GFXDIR)/sprites.aseprite $(GENDIR)/
+	aseprite -b --sheet $@ --sheet-type vertical --data $(GENDIR)/sheet.json $<
+
+$(SRCDIR)/$(GENDIR)/:
+	mkdir $(SRCDIR)\$(GENDIR)
+
+$(GENDIR)/:
+	mkdir $(GENDIR)
+
 $(OUTDIR)/:
-	mkdir build
+	mkdir $(OUTDIR)
+
+clean:
+	rmdir /s /q gen
+	rmdir /s /q "src/gen"
+	rmdir /s /q build
