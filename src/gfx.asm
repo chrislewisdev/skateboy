@@ -36,6 +36,21 @@ SPR3_ID     EQU _OAMRAM+14
 ; Frame indices for the skater animations
 SKTR_BASE_FRAME       EQU (SpriteData - TileData) / 16
 
+MACRO SetPlayerFrame
+SPR_ID = SKTR_BASE_FRAME + \1 * 16
+Y = 0
+REPT 4
+X = 0
+REPT 4
+  ld a, SPR_ID
+  ld [SPR0_ID + (X * 4) + (Y * 16)], a
+SPR_ID = SPR_ID + 1
+X = X + 1
+ENDR
+Y = Y + 1
+ENDR
+ENDM
+
 InitGraphics::
   ; Wait until vblank, disable screen so we can initialise things
   call WaitForNextVerticalBlank
@@ -61,7 +76,7 @@ InitGraphics::
   call CopyMemory
   call CopyMapData
   ; Set up sprite to display on screen
-  call InitSprites
+  SetPlayerFrame 0
   call UpdateSprites
   ; Initialise palettes
   ld a, %11100100
@@ -118,7 +133,6 @@ X = X + 1
 ENDR
 
   ; set Y values
-; Update spritesd
 Y = 0
 REPT 4
   ld a, [verticalPosition]
@@ -149,29 +163,20 @@ ENDR
 
 DetermineAnimationFrames:
   ; Check for ollie state
-  ; ld a, [airTimer]
-  ; ld b, a
-  ; or a
-  ; jr z, .isNotOllieing
-  ;   ld a, SKTR_HEAD_A_OLLIE
-  ;   ld [SPR0_ID], a
-  ;   ld a, SKTR_HEAD_B_OLLIE
-  ;   ld [SPR2_ID], a
-  ;   ld a, b
-  ;   cp 10
-  ;   jr c, .isOllieing
-  ;   ld a, [movementFlags]
-  ;   and GRIND_FLAG
-  ;   jr nz, .isOllieing
-  ;   jr .isNotOllieing
-  ;   ; TODO rename these... it is not just for ollieing
-  ;   .isOllieing
-  ;     ld a, SKTR_LEG_A_OLLIE
-  ;     ld [SPR1_ID], a
-  ;     ld a, SKTR_LEG_B_OLLIE
-  ;     ld [SPR3_ID], a
-  ;     ret
-  ; .isNotOllieing
+  ld a, [movementFlags]
+  and GRIND_FLAG
+  jr nz, .isInAirStance
+  ld a, [airTimer]
+  or a
+  jr z, .isNotInAirStance
+    cp 10
+    jr c, .isInAirStance
+    jr .isNotInAirStance
+    .isInAirStance
+      SetPlayerFrame 2
+      ret
+  .isNotInAirStance
+  SetPlayerFrame 0
   ret
 
 CopyMapData:
