@@ -2,6 +2,23 @@ INCLUDE "hardware.inc"
 INCLUDE "defines.inc"
 
 SECTION "Core functions", ROM0
+
+VerticalBlankHandler::
+  ld a, 1
+  ld [verticalBlankFlag], a
+  ret
+
+; Waits for the START of a new vblank period to ensure maximum time is available.
+WaitForNextVerticalBlankViaInterrupt::
+  .untilVerticalBlank
+    halt
+    ld a, [verticalBlankFlag]
+    or a
+    jr z, .untilVerticalBlank
+  ld a, 0
+  ld [verticalBlankFlag], a
+  ret
+
 ; Waits for the START of a new vblank period to ensure maximum time is available.
 WaitForNextVerticalBlank::
   .untilVerticalBlank
