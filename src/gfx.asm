@@ -15,7 +15,7 @@ INCBIN "gen/sprites.2bpp"
 EndGfxData:
 
 MapData::
-INCBIN "data/sample-map.bin"
+INCBIN "data/grand-st-mall.bin"
 EndMapData::
 
 MapHeight   EQU 18
