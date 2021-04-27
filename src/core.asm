@@ -1,8 +1,10 @@
 INCLUDE "hardware.inc"
 INCLUDE "defines.inc"
 
-SECTION "Core functions", ROM0
+SECTION "Local variables - core.asm", WRAM0
+verticalBlankFlag: db
 
+SECTION "Core functions", ROM0
 VerticalBlankHandler::
   ld a, 1
   ld [verticalBlankFlag], a

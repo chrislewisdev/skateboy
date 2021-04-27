@@ -1,19 +1,3 @@
-; Variables
-frameCounter        EQU _RAM
-input               EQU _RAM+1
-previousInput       EQU _RAM+2
-jumpVelocity        EQU _RAM+3
-verticalPosition    EQU _RAM+4
-airTimer            EQU _RAM+5
-animationFlags      EQU _RAM+6
-movementFlags       EQU _RAM+7
-grindGraceTimer     EQU _RAM+8
-loadTriggerCounter  EQU _RAM+9
-mapLoadIndex        EQU _RAM+10
-mapInsertIndex      EQU _RAM+11
-mapProgressIndex    EQU _RAM+12
-verticalBlankFlag   EQU _RAM+13
-
 ; Input Constants
 BTN_DOWN      EQU %10000000
 BTN_UP        EQU %01000000

@@ -1,8 +1,6 @@
 INCLUDE "hardware.inc"
 INCLUDE "defines.inc"
 
-SECTION "Game state logic", ROM0
-
 TILE_SIZE         EQU 8
 GROUND_TILE       EQU 17
 OLLIE_FORCE       EQU SIGNED_BASELINE + 3
@@ -15,6 +13,11 @@ SCREEN_Y_BASE     EQU 16
 SPRITE_Y_OFFSET   EQU 2
 GRIND_CLEARANCE   EQU 3
 
+SECTION "Local variables - gameState.asm", WRAM0
+jumpVelocity: db
+grindGraceTimer: db
+
+SECTION "Game state logic", ROM0
 InitGameState::
   ld a, SIGNED_BASELINE
   ld [jumpVelocity], a

@@ -3,8 +3,11 @@ INCLUDE "defines.inc"
 
 SPEED EQU 2
 
-SECTION "Graphics functions", ROM0
-
+SECTION "Local variables - gfx.asm", WRAM0
+mapLoadIndex: db
+mapInsertIndex: db
+  
+SECTION "Assets", ROM0
 TileData:
 INCBIN "data/tiles.bin"
 SpriteData:
@@ -19,6 +22,7 @@ MapHeight   EQU 18
 MapWidth    EQU (EndMapData - MapData) / MapHeight
 EXPORT MapHeight, MapWidth
 
+SECTION "Graphics functions", ROM0
 ; Sprite references
 SPR0_Y      EQU _OAMRAM
 SPR0_X      EQU _OAMRAM+1
