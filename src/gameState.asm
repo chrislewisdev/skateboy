@@ -6,7 +6,7 @@ GROUND_TILE       EQU 17
 OLLIE_FORCE_HI    EQU SIGNED_BASELINE + 3
 OLLIE_FORCE_LO    EQU 200
 GRAVITY_HI        EQU 0
-GRAVITY_LO        EQU 55
+GRAVITY_LO        EQU 70
 FALL_SPEED_LIMIT  EQU SIGNED_BASELINE - 10
 GRIND_TILE_START  EQU 2
 GRIND_TILE_END    EQU 5
@@ -38,7 +38,6 @@ InitGameState::
 
 UpdateGameState::
   call ReadInput
-  call CheckOnGround
   call UpdateGrindGraceTimer
   call UpdatePlayer
   ret
@@ -58,31 +57,24 @@ UpdateGrindGraceTimer:
   ret
 
 UpdatePlayer:
+  call ApplyVelocity
+  call CheckOnGround
   ld a, [movementFlags]
   and GROUND_FLAG
   jr z, .notOnGround
   .onGround
-    call PerformGroundChecks
+    ld a, 0
+    ld [airTimer], a
+    call CheckJumpInput
+    call CheckLanding
     jr .endOfGroundCheck
   .notOnGround
-    call PerformAirChecks
+    ld a, [airTimer]
+    inc a
+    ld [airTimer], a
+    call CheckGrindInput
+    call DecayVelocity
   .endOfGroundCheck
-  call ApplyVelocity
-  ret
-
-PerformGroundChecks:
-  ld a, 0
-  ld [airTimer], a
-  call CheckJumpInput
-  call CheckLanding
-  ret
-
-PerformAirChecks:
-  ld a, [airTimer]
-  inc a
-  ld [airTimer], a
-  call CheckGrindInput
-  call DecayVelocity
   ret
 
 CheckJumpInput:
