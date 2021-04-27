@@ -20,6 +20,7 @@ Startup:
   di
   call InitGameState
   call InitGraphics
+  ; Enable vblank interrupt only
   ld a, IEF_VBLANK
   ld [rIE], a
   ei
@@ -30,7 +31,4 @@ GameLoop:
   ld a, [frameCounter]
   inc a
   ld [frameCounter], a
-  ; and 1 ; modulo 2
-  ; jp z, GameLoop
-  ; call WaitForNextVerticalBlankViaInterrupt
   jp GameLoop
