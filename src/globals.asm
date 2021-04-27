@@ -2,7 +2,9 @@ SECTION "Global variables", WRAM0
 frameCounter:: db
 input:: db
 previousInput:: db
-verticalPosition:: db
+verticalPosition::
+  .hi:: db
+  .lo:: db
 airTimer:: db
 movementFlags:: db
 loadTriggerCounter:: db

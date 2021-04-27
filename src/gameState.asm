@@ -3,8 +3,11 @@ INCLUDE "defines.inc"
 
 TILE_SIZE         EQU 8
 GROUND_TILE       EQU 17
-OLLIE_FORCE       EQU SIGNED_BASELINE + 3
-FALL_SPEED_LIMIT  EQU SIGNED_BASELINE - 3
+OLLIE_FORCE_HI    EQU SIGNED_BASELINE + 3
+OLLIE_FORCE_LO    EQU 200
+GRAVITY_HI        EQU 0
+GRAVITY_LO        EQU 55
+FALL_SPEED_LIMIT  EQU SIGNED_BASELINE - 10
 GRIND_TILE_START  EQU 2
 GRIND_TILE_END    EQU 5
 GRIND_GRACE_LIMIT EQU 30
@@ -14,16 +17,20 @@ SPRITE_Y_OFFSET   EQU 2
 GRIND_CLEARANCE   EQU 3
 
 SECTION "Local variables - gameState.asm", WRAM0
-jumpVelocity: db
+jumpVelocity:
+  .hi db
+  .lo db
 grindGraceTimer: db
 
 SECTION "Game state logic", ROM0
 InitGameState::
   ld a, SIGNED_BASELINE
-  ld [jumpVelocity], a
+  ld [jumpVelocity.hi], a
   ld a, 30
-  ld [verticalPosition], a
+  ld [verticalPosition.hi], a
   ld a, 0
+  ld [jumpVelocity.lo], a
+  ld [verticalPosition.lo], a
   ld [movementFlags], a
   ld [grindGraceTimer], a
   ld a, 16
@@ -85,8 +92,10 @@ CheckJumpInput:
     ld a, [input]
     and BTN_A
     ret z
-      ld a, OLLIE_FORCE
-      ld [jumpVelocity], a
+      ld a, OLLIE_FORCE_HI
+      ld [jumpVelocity.hi], a
+      ld a, OLLIE_FORCE_LO
+      ld [jumpVelocity.lo], a
   ret
 
 CheckGrindInput:
@@ -104,7 +113,7 @@ CheckGrindInput:
     inc a
     ld [grindGraceTimer], a
     ; are we on a grindable surface?
-    ld a, [verticalPosition]
+    ld a, [verticalPosition.hi]
     add a, SPRITE_SIZE - SCREEN_Y_BASE + GRIND_CLEARANCE
     ld d, a
     ld a, [rSCX]
@@ -122,22 +131,26 @@ CheckGrindInput:
     ld a, d
     and a, 7  ; modulo 8
     ld b, a
-    ld a, [verticalPosition]
+    ld a, [verticalPosition.hi]
     sub a, b
     add a, GRIND_CLEARANCE + SPRITE_Y_OFFSET
-    ld [verticalPosition], a
+    ld [verticalPosition.hi], a
+    ld a, 0
+    ld [verticalPosition.lo], a
     ; Set the grind flag and halt vertical movement
     ld a, [movementFlags]
     or GRIND_FLAG
     ld [movementFlags], a
     ld a, SIGNED_BASELINE
-    ld [jumpVelocity], a
+    ld [jumpVelocity.hi], a
+    ld a, 0
+    ld [jumpVelocity.lo], a
     ret
   .continueGrind
     ld a, [input]
     and BTN_B
     jr z, .exitGrindWithOllie
-      ld a, [verticalPosition]
+      ld a, [verticalPosition.hi]
       add a, SPRITE_SIZE - SCREEN_Y_BASE + GRIND_CLEARANCE
       ld d, a
       ld a, [rSCX]
@@ -152,8 +165,10 @@ CheckGrindInput:
       jr nc, .exitGrind
       ret
   .exitGrindWithOllie
-  ld a, OLLIE_FORCE
-  ld [jumpVelocity], a
+  ld a, OLLIE_FORCE_HI
+  ld [jumpVelocity.hi], a
+  ld a, OLLIE_FORCE_LO
+  ld [jumpVelocity.lo], a
   ld a, 1
   ld [airTimer], a
   .exitGrind
@@ -165,19 +180,23 @@ CheckGrindInput:
 ; To be called when the player is touching the ground
 ; Zeroes their vertical velocity only if falling
 CheckLanding:
-  ld a, [jumpVelocity]
+  ld a, [jumpVelocity.hi]
   cp SIGNED_BASELINE
   ret nc
   ld a, SIGNED_BASELINE
-  ld [jumpVelocity], a
+  ld [jumpVelocity.hi], a
+  ld a, 0
+  ld [jumpVelocity.lo], a
   ; Adjust the player to rest exactly on top of the ground tile
-  ld a, [verticalPosition]
+  ld a, [verticalPosition.hi]
   add a, SPRITE_SIZE - SCREEN_Y_BASE - SPRITE_Y_OFFSET
   and 7 ; modulo 8
   ld b, a
-  ld a, [verticalPosition]
+  ld a, [verticalPosition.hi]
   sub a, b
-  ld [verticalPosition], a
+  ld [verticalPosition.hi], a
+  ld a, 0
+  ld [verticalPosition.lo], a
   ret
 
 ; d = Y value
@@ -218,7 +237,7 @@ ResolveTileAddress:
   ret
 
 CheckOnGround:
-  ld a, [verticalPosition]
+  ld a, [verticalPosition.hi]
   add a, SPRITE_SIZE - SCREEN_Y_BASE - SPRITE_Y_OFFSET
   ld d, a
   ld a, [rSCX]
@@ -244,36 +263,57 @@ DecayVelocity:
   ld a, [movementFlags]
   and GRIND_FLAG
   ret nz
-  ; only do every 4 frames once in air
-  ld a, [airTimer]
-  and 3 ; modulo 4
-  ret nz
-  ld a, [jumpVelocity]
-  dec a
+  ld a, [jumpVelocity.lo]
+  sub GRAVITY_LO
+  ld b, a
+  ld a, [jumpVelocity.hi]
+  sbc GRAVITY_HI
   cp FALL_SPEED_LIMIT
   ret c
-  ld [jumpVelocity], a
+  ld [jumpVelocity.hi], a
+  ld a, b
+  ld [jumpVelocity.lo], a
   ret
 
 ApplyVelocity:
-  ld a, [jumpVelocity]
-  ld d, a
+  ld a, [jumpVelocity.hi]
   cp SIGNED_BASELINE
+  ret z
   jr c, .isFalling
   .isJumping
     sub a, SIGNED_BASELINE
-    ld b, a
-    ld a, [verticalPosition]
-    sub a, b
-    ld [verticalPosition], a
+    ld b, a ; b = jumpVelocity.hi - signed_base
+    ld a, [jumpVelocity.lo]
+    ld c, a ; = c = jumpVelocity.lo
+    ld a, [verticalPosition.hi]
+    ld d, a ; d = verticalPosition.hi
+    ld a, [verticalPosition.lo]
+    ld e, a ; e = verticalPosition.lo
+
+    ld a, e
+    sub a, c
+    ld [verticalPosition.lo], a
+    ld a, d
+    sbc a, b
+    ld [verticalPosition.hi], a
     jr .endOfJumpLogic
   .isFalling
-    ld b, a
+    ld b, a ; b = jumpVelocity.hi
     ld a, SIGNED_BASELINE
     sub a, b
-    ld b, a
-    ld a, [verticalPosition]
-    add a, b
-    ld [verticalPosition], a
+    ld b, a ; b = signed_base - jumpVelocity.hi
+    ld a, [jumpVelocity.lo]
+    ld c, a ; c = jumpVelocity.lo
+    ld a, [verticalPosition.hi]
+    ld d, a ; d = verticalPosition.hi
+    ld a, [verticalPosition.lo]
+    ld e, a ; e = verticalPosition.lo
+
+    ld a, e
+    add c
+    ld [verticalPosition.lo], a
+    ld a, d
+    adc a, b
+    ld [verticalPosition.hi], a
   .endOfJumpLogic
   ret

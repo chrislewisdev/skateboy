@@ -139,7 +139,7 @@ ENDR
   ; set Y values
 Y = 0
 REPT 4
-  ld a, [verticalPosition]
+  ld a, [verticalPosition.hi]
   add a, Y * 8
 X = 0
 REPT 4
