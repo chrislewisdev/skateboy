@@ -4,7 +4,7 @@ INCLUDE "defines.inc"
 TILE_SIZE         EQU 8
 GROUND_TILE       EQU 17
 OLLIE_FORCE_HI    EQU SIGNED_BASELINE + 4
-OLLIE_FORCE_LO    EQU 50
+OLLIE_FORCE_LO    EQU 200
 GRAVITY_HI        EQU 0
 GRAVITY_LO        EQU 70
 FALL_SPEED_LIMIT  EQU SIGNED_BASELINE - 6
@@ -67,6 +67,10 @@ UpdatePlayer:
     ld [airTimer], a
     call CheckJumpInput
     call CheckLanding
+    ; Still need to decay velocity if jumping
+    ld a, [jumpVelocity.hi]
+    cp SIGNED_BASELINE
+    call nc, DecayVelocity
     jr .endOfGroundCheck
   .notOnGround
     ld a, [airTimer]
@@ -234,7 +238,16 @@ CheckOnGround:
   ld d, a
   ld a, [rSCX]
   and 7 ; modulo 8
-  add a, FIXED_X_POSITION
+  ; Check first wheel
+  add a, FIXED_X_POSITION + 8
+  ld e, a
+  call ResolveTileAddress
+  ld a, [hl]
+  cp GROUND_TILE
+  jr z, .onGround
+  ; Check second wheel
+  ld a, e
+  add 24
   ld e, a
   call ResolveTileAddress
   ld a, [hl]
