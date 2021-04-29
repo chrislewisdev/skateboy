@@ -14,6 +14,11 @@ SpriteData:
 INCBIN "gen/sprites.2bpp"
 EndGfxData:
 
+PlayerAnimations:
+INCBIN "gen/sprites.anim"
+EndPlayerAnimations:
+PlayerHeadFramesCount EQU 3
+
 MapData::
 INCBIN "data/grand-st-mall.bin"
 EndMapData::
@@ -40,15 +45,36 @@ SPR3_ID     EQU _OAMRAM+14
 ; Frame indices for the skater animations
 SKTR_BASE_FRAME       EQU (SpriteData - TileData) / 16
 
-MACRO SetPlayerFrame
-SPR_ID = SKTR_BASE_FRAME + \1 * 16
+MACRO SetPlayerHeadFrame
+  ld hl, PlayerAnimations
+  ld bc, \1 * 8
+  add hl, bc
 Y = 0
-REPT 4
+REPT 2
 X = 0
 REPT 4
-  ld a, SPR_ID
+  ld a, [hl]
+  add SKTR_BASE_FRAME
   ld [SPR0_ID + (X * 4) + (Y * 16)], a
-SPR_ID = SPR_ID + 1
+  inc hl
+X = X + 1
+ENDR
+Y = Y + 1
+ENDR
+ENDM
+
+MACRO SetPlayerLegsFrame
+  ld hl, PlayerAnimations + PlayerHeadFramesCount * 8
+  ld bc, \1 * 8
+  add hl, bc
+Y = 2
+REPT 2
+X = 0
+REPT 4
+  ld a, [hl]
+  add SKTR_BASE_FRAME
+  ld [SPR0_ID + (X * 4) + (Y * 16)], a
+  inc hl
 X = X + 1
 ENDR
 Y = Y + 1
@@ -80,7 +106,8 @@ InitGraphics::
   call CopyMemory
   call CopyMapData
   ; Set up sprite to display on screen
-  SetPlayerFrame 0
+  SetPlayerHeadFrame 0
+  SetPlayerLegsFrame 0
   call UpdateSprites
   ; Initialise palettes
   ld a, %11100100
@@ -172,15 +199,17 @@ DetermineAnimationFrames:
   jr nz, .isInAirStance
   ld a, [airTimer]
   or a
-  jr z, .isNotInAirStance
+  jp z, .isNotInAirStance
     cp 10
     jr c, .isInAirStance
     jr .isNotInAirStance
     .isInAirStance
-      SetPlayerFrame 2
+      SetPlayerHeadFrame 2
+      SetPlayerLegsFrame 2
       ret
   .isNotInAirStance
-  SetPlayerFrame 0
+  SetPlayerHeadFrame 0
+  SetPlayerLegsFrame 0
   ret
 
 CopyMapData:

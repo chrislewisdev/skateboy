@@ -18,7 +18,7 @@ $(OUTDIR)/%.o: $(SRCDIR)/%.asm $(INC) $(BIN) $(OUTDIR)/
 $(OUTDIR)/gfx.o: $(SRCDIR)/$(GENDIR)/sprites.2bpp
 
 $(SRCDIR)/$(GENDIR)/sprites.2bpp: $(GENDIR)/sprites.png $(SRCDIR)/$(GENDIR)/
-	rgbgfx -o $@ $<
+	rgbgfx -u -t src/gen/sprites.anim -o $@ $<
 
 $(GENDIR)/sprites.png: $(GFXDIR)/sprites.aseprite $(GENDIR)/
 	aseprite -b --sheet $@ --sheet-type vertical --data $(GENDIR)/sheet.json $<
