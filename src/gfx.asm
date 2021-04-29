@@ -178,36 +178,68 @@ ENDR
   ret
 
 InitSprites:
-SPR_ID = SKTR_BASE_FRAME
-Y = 0
-REPT 4
-X = 0
-REPT 4
-  ld a, SPR_ID
-  ld [SPR0_ID + (X * 4) + (Y * 16)], a
-SPR_ID = SPR_ID + 1
-X = X + 1
-ENDR
-Y = Y + 1
-ENDR
+  SetPlayerHeadFrame 0
+  SetPlayerLegsFrame 0
   ret
 
 DetermineAnimationFrames:
-  ; Check for ollie state
+  ; Grind status takes first priority
   ld a, [movementFlags]
   and GRIND_FLAG
-  jr nz, .isInAirStance
+  jp nz, .grindStance
+  ; Are we in the air? If not, skip trick animations
   ld a, [airTimer]
+  ld d, a
   or a
-  jp z, .isNotInAirStance
-    cp 10
-    jr c, .isInAirStance
-    jr .isNotInAirStance
-    .isInAirStance
-      SetPlayerHeadFrame 2
-      SetPlayerLegsFrame 2
-      ret
-  .isNotInAirStance
+  jp z, .defaultStance
+  ; Now check for trick animations
+  ld a, [trickId]
+  cp TRICK_OLLIE
+  jp z, .ollieAnimation
+  cp TRICK_SHUVIT
+  jp z, .shuvitAnimation
+.ollieAnimation
+  SetPlayerHeadFrame 2
+  ld a, d
+  cp 10
+  jp nc, .ollieFrame2
+  .ollieFrame1
+    SetPlayerLegsFrame 2
+    ret
+  .ollieFrame2
+    SetPlayerLegsFrame 0
+    ret
+.shuvitAnimation
+  SetPlayerHeadFrame 2
+  ld a, d
+  cp 5
+  jp c, .shuvitFrame1
+  cp 12
+  jp c, .shuvitFrame2
+  cp 19
+  jp c, .shuvitFrame3
+  cp 26
+  jp c, .shuvitFrame4
+  .shuvitFrame5
+    SetPlayerLegsFrame 0
+    ret
+  .shuvitFrame1
+    SetPlayerLegsFrame 2
+    ret
+  .shuvitFrame2
+    SetPlayerLegsFrame 3
+    ret
+  .shuvitFrame3
+    SetPlayerLegsFrame 4
+    ret
+  .shuvitFrame4
+    SetPlayerLegsFrame 5
+    ret
+.grindStance
+  SetPlayerHeadFrame 2
+  SetPlayerLegsFrame 2
+  ret
+.defaultStance
   SetPlayerHeadFrame 0
   SetPlayerLegsFrame 0
   ret

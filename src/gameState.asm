@@ -65,7 +65,8 @@ UpdatePlayer:
   .onGround
     ld a, 0
     ld [airTimer], a
-    call CheckJumpInput
+    call CheckOllieInput
+    call CheckShuvInput
     call CheckLanding
     ; Still need to decay velocity if jumping
     ld a, [jumpVelocity.hi]
@@ -81,17 +82,35 @@ UpdatePlayer:
   .endOfGroundCheck
   ret
 
-CheckJumpInput:
+CheckOllieInput:
   ld a, [previousInput]
   and BTN_A
   ret nz
     ld a, [input]
     and BTN_A
     ret z
-      ld a, OLLIE_FORCE_HI
-      ld [jumpVelocity.hi], a
-      ld a, OLLIE_FORCE_LO
-      ld [jumpVelocity.lo], a
+      call PopBoard
+      ld a, TRICK_OLLIE
+      ld [trickId], a
+  ret
+
+CheckShuvInput:
+  ld a, [previousInput]
+  and BTN_LEFT
+  ret nz
+    ld a, [input]
+    and BTN_LEFT
+    ret z
+      call PopBoard
+      ld a, TRICK_SHUVIT
+      ld [trickId], a
+  ret
+
+PopBoard:
+  ld a, OLLIE_FORCE_HI
+  ld [jumpVelocity.hi], a
+  ld a, OLLIE_FORCE_LO
+  ld [jumpVelocity.lo], a
   ret
 
 CheckGrindInput:

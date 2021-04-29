@@ -9,3 +9,4 @@ airTimer:: db
 movementFlags:: db
 loadTriggerCounter:: db
 mapProgressIndex:: db
+trickId:: db
