@@ -31,4 +31,10 @@ GameLoop:
   ld a, [frameCounter]
   inc a
   ld [frameCounter], a
+  ; Uncomment to run at lower speeds
+;   and 7
+;   jp z, GameLoop
+; REPT 7
+;   call WaitForNextVerticalBlankViaInterrupt
+; ENDR
   jp GameLoop

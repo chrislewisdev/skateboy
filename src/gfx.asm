@@ -198,6 +198,8 @@ DetermineAnimationFrames:
   jp z, .ollieAnimation
   cp TRICK_SHUVIT
   jp z, .shuvitAnimation
+  cp TRICK_KICKFLIP
+  jp z, .kickflipAnimation
 .ollieAnimation
   SetPlayerHeadFrame 2
   ld a, d
@@ -235,6 +237,32 @@ DetermineAnimationFrames:
   .shuvitFrame4
     SetPlayerLegsFrame 5
     ret
+.kickflipAnimation
+  SetPlayerHeadFrame 2
+  ld a, d
+  cp 5
+  jp c, .kickflipFrame1
+  cp 12
+  jp c, .kickflipFrame2
+  cp 19
+  jp c, .kickflipFrame3
+  cp 26
+  jp c, .kickflipFrame4
+.kickflipFrame6
+  SetPlayerLegsFrame 0
+  ret
+.kickflipFrame1
+  SetPlayerLegsFrame 2
+  ret
+.kickflipFrame2
+  SetPlayerLegsFrame 6
+  ret
+.kickflipFrame3
+  SetPlayerLegsFrame 7
+  ret
+.kickflipFrame4
+  SetPlayerLegsFrame 8
+  ret
 .grindStance
   SetPlayerHeadFrame 2
   SetPlayerLegsFrame 2

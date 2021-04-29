@@ -67,6 +67,7 @@ UpdatePlayer:
     ld [airTimer], a
     call CheckOllieInput
     call CheckShuvInput
+    call CheckKickflipInput
     call CheckLanding
     ; Still need to decay velocity if jumping
     ld a, [jumpVelocity.hi]
@@ -103,6 +104,18 @@ CheckShuvInput:
     ret z
       call PopBoard
       ld a, TRICK_SHUVIT
+      ld [trickId], a
+  ret
+
+CheckKickflipInput:
+  ld a, [previousInput]
+  and BTN_DOWN
+  ret nz
+    ld a, [input]
+    and BTN_DOWN
+    ret z
+      call PopBoard
+      ld a, TRICK_KICKFLIP
       ld [trickId], a
   ret
 
