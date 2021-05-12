@@ -16,11 +16,21 @@ SCREEN_Y_BASE     EQU 16
 SPRITE_Y_OFFSET   EQU 2
 GRIND_CLEARANCE   EQU 3
 
+TRICK_INPUT_LEFT  EQU %00
+TRICK_INPUT_RIGHT EQU %01
+TRICK_INPUT_UP    EQU %10
+TRICK_INPUT_DOWN  EQU %11
+
+TRICK_COMBO_SHUVIT    EQU TRICK_INPUT_RIGHT
+TRICK_COMBO_KICKFLIP  EQU TRICK_INPUT_DOWN
+
 SECTION "Local variables - gameState.asm", WRAM0
 jumpVelocity:
   .hi db
   .lo db
 grindGraceTimer: db
+trickInput: db
+trickInputIndex: db
 
 SECTION "Game state logic", ROM0
 InitGameState::
@@ -33,6 +43,8 @@ InitGameState::
   ld [verticalPosition.lo], a
   ld [movementFlags], a
   ld [grindGraceTimer], a
+  ld [trickInputIndex], a
+  ld [trickInput], a
   ld a, 16
   ld [loadTriggerCounter], a
 
@@ -65,9 +77,16 @@ UpdatePlayer:
   .onGround
     ld a, 0
     ld [airTimer], a
-    call CheckOllieInput
-    call CheckShuvInput
-    call CheckKickflipInput
+    ld a, [movementFlags]
+    and TRICK_SETUP_FLAG
+    jr z, .isNotSettingUpTrick
+    .isSettingUpTrick
+      call GatherTrickInput
+      call CheckTrickRelease
+      jr .endTrickSetupCheck
+    .isNotSettingUpTrick
+      call CheckTrickInitiation
+    .endTrickSetupCheck
     call CheckLanding
     ; Still need to decay velocity if jumping
     ld a, [jumpVelocity.hi]
@@ -83,40 +102,109 @@ UpdatePlayer:
   .endOfGroundCheck
   ret
 
-CheckOllieInput:
+CheckTrickInitiation:
   ld a, [previousInput]
   and BTN_A
   ret nz
     ld a, [input]
     and BTN_A
     ret z
-      call PopBoard
-      ld a, TRICK_OLLIE
-      ld [trickId], a
+      ld a, [movementFlags]
+      or TRICK_SETUP_FLAG
+      ld [movementFlags], a
   ret
 
-CheckShuvInput:
+; b in = the key to check for
+; c in = the input id to record if pressed
+CheckTrickInput:
+  ; Early-exit: key is already pressed
   ld a, [previousInput]
-  and BTN_LEFT
+  and b
   ret nz
-    ld a, [input]
-    and BTN_LEFT
-    ret z
-      call PopBoard
-      ld a, TRICK_SHUVIT
-      ld [trickId], a
+  ; Early-exit: key not pressed now
+  ld a, [input]
+  and b
+  ret z
+  ; c << (trickInputIndex * 2)
+  ld a, [trickInputIndex]
+  and a
+  jr z, .endRotationLoop
+  .loopToRotateTrickByte
+    rlc c
+    rlc c
+    dec a
+    jr nz, .loopToRotateTrickByte
+  .endRotationLoop
+  ; trickInput &= c
+  ld a, [trickInput]
+  or c
+  ld [trickInput], a
+  ; trickInputIndex++
+  ld a, [trickInputIndex]
+  inc a
+  ld [trickInputIndex], a
   ret
 
-CheckKickflipInput:
+GatherTrickInput:
+  ld b, BTN_LEFT
+  ld c, TRICK_INPUT_LEFT
+  call CheckTrickInput
+  ld b, BTN_RIGHT
+  ld c, TRICK_INPUT_RIGHT
+  call CheckTrickInput
+  ld b, BTN_UP
+  ld c, TRICK_INPUT_UP
+  call CheckTrickInput
+  ld b, BTN_DOWN
+  ld c, TRICK_INPUT_DOWN
+  call CheckTrickInput
+  ret
+
+CheckTrickRelease:
   ld a, [previousInput]
-  and BTN_DOWN
+  and BTN_A
+  ret z
+
+  ld a, [input]
+  and BTN_A
   ret nz
-    ld a, [input]
-    and BTN_DOWN
-    ret z
-      call PopBoard
-      ld a, TRICK_KICKFLIP
-      ld [trickId], a
+
+  call PopBoard
+  call DetermineTrickId
+  call ResetTrickState
+  ret
+
+DetermineTrickId:
+  ld a, [trickInputIndex]
+  and a
+  jr nz, .hasTrickInput
+  .noTrickInput
+    ld a, TRICK_OLLIE
+    ld [trickId], a
+    ret
+  .hasTrickInput
+  ld a, [trickInput]
+  cp TRICK_COMBO_KICKFLIP
+  jr nz, .isNotDoingKickflip
+    ld a, TRICK_KICKFLIP
+    ld [trickId], a
+    ret
+  .isNotDoingKickflip
+  cp TRICK_COMBO_SHUVIT
+  jr nz, .isNotDoingShuvit
+    ld a, TRICK_SHUVIT
+    ld [trickId], a
+    ret
+  .isNotDoingShuvit
+  ret
+
+ResetTrickState:
+  ld a, [movementFlags]
+  and ~TRICK_SETUP_FLAG
+  ld [movementFlags], a
+  ld a, 0
+  ld [trickInput], a
+  ld [trickInputIndex], a
   ret
 
 PopBoard:

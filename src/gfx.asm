@@ -20,7 +20,7 @@ EndPlayerAnimations:
 PlayerHeadFramesCount EQU 3
 
 MapData::
-INCBIN "data/grand-st-mall.bin"
+INCBIN "data/sample-map.bin"
 EndMapData::
 
 MapHeight   EQU 18

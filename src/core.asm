@@ -6,8 +6,10 @@ verticalBlankFlag: db
 
 SECTION "Core functions", ROM0
 VerticalBlankHandler::
+  push af
   ld a, 1
   ld [verticalBlankFlag], a
+  pop af
   ret
 
 ; Waits for the START of a new vblank period to ensure maximum time is available.
