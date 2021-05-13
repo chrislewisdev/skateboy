@@ -15,7 +15,13 @@ $(OUTDIR)/skateboy.gb: $(OBJ)
 $(OUTDIR)/%.o: $(SRCDIR)/%.asm $(INC) $(BIN) $(OUTDIR)/
 	rgbasm -i $(SRCDIR) -o $@ $<
 
-$(OUTDIR)/gfx.o: $(SRCDIR)/$(GENDIR)/sprites.2bpp
+$(OUTDIR)/gfx.o: $(SRCDIR)/$(GENDIR)/sprites.2bpp $(SRCDIR)/$(GENDIR)/hud.2bpp
+
+$(SRCDIR)/$(GENDIR)/hud.2bpp: $(GENDIR)/hud.png
+	rgbgfx -u -t src/gen/hud.tilemap -o $@ $<
+
+$(GENDIR)/hud.png: $(GFXDIR)/hud.aseprite
+	aseprite -b $< --save-as $@
 
 $(SRCDIR)/$(GENDIR)/sprites.2bpp: $(GENDIR)/sprites.png $(SRCDIR)/$(GENDIR)/
 	rgbgfx -u -t src/gen/sprites.anim -o $@ $<

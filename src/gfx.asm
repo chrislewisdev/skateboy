@@ -12,12 +12,18 @@ TileData:
 INCBIN "data/tiles.bin"
 SpriteData:
 INCBIN "gen/sprites.2bpp"
+HudTileData:
+INCBIN "gen/hud.2bpp"
 EndGfxData:
 
 PlayerAnimations:
 INCBIN "gen/sprites.anim"
 EndPlayerAnimations:
 PlayerHeadFramesCount EQU 3
+
+HudMapData:
+INCBIN "gen/hud.tilemap"
+EndHudMapData:
 
 MapData::
 INCBIN "data/sample-map.bin"
@@ -95,6 +101,10 @@ InitGraphics::
   ld hl, _SCRN0
   ld bc, 32*32
   call ZeroMemory
+  ; Zero out the window map
+  ld hl, _SCRN1
+  ld bc, 32*32
+  call ZeroMemory
   ; Zero out sprite attribute data
   ld hl, _OAMRAM
   ld bc, 40*4 ; 40 sprites, 4 bytes each
@@ -103,6 +113,11 @@ InitGraphics::
   ld hl, _VRAM
   ld de, TileData
   ld bc, EndGfxData - TileData
+  call CopyMemory
+  ; Copy bg/window data
+  ld hl, _SCRN1
+  ld de, HudMapData
+  ld bc, EndHudMapData - HudMapData
   call CopyMemory
   call CopyMapData
   ; Set up sprite to display on screen
@@ -122,8 +137,13 @@ InitGraphics::
   ld [mapProgressIndex], a
   ld a, 32 % MapWidth
   ld [mapLoadIndex], a
+  ; Set window position
+  ld a, 7
+  ld [rWX], a
+  ld a, 120
+  ld [rWY], a
   ; Turn display back on
-  ld a, LCDCF_ON|LCDCF_BG8000|LCDCF_BG9800|LCDCF_BGON|LCDCF_WINOFF|LCDCF_OBJ8|LCDCF_OBJON
+  ld a, LCDCF_ON|LCDCF_BG8000|LCDCF_BG9800|LCDCF_BGON|LCDCF_WIN9C00|LCDCF_WINON|LCDCF_OBJ8|LCDCF_OBJON
   ld [rLCDC], a
   ret
 
