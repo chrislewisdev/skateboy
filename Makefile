@@ -18,7 +18,10 @@ $(OUTDIR)/%.o: $(SRCDIR)/%.asm $(INC) $(BIN) $(OUTDIR)/
 $(OUTDIR)/gfx.o: $(SRCDIR)/$(GENDIR)/sprites.2bpp $(SRCDIR)/$(GENDIR)/hud.2bpp
 
 $(SRCDIR)/$(GENDIR)/hud.2bpp: $(GENDIR)/hud.png
-	rgbgfx -u -t src/gen/hud.tilemap -o $@ $<
+	superfamiconv palette --mode gb --no-remap --in-image $< --out-data gen/hud.palette
+	superfamiconv tiles --mode gb --bpp 2 --no-flip --in-palette gen/hud.palette --in-image $< --out-data $@
+	superfamiconv map --mode gb --bpp 2 --no-flip --map-width 32 --tile-base-offset 88 \
+		--in-palette gen/hud.palette --in-image $< --in-tiles $@ --out-data src/gen/hud.tilemap
 
 $(GENDIR)/hud.png: $(GFXDIR)/hud.aseprite
 	aseprite -b $< --save-as $@
