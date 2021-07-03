@@ -8,7 +8,7 @@ The game in its current form is really just a proof of concept, with some techni
 
 ## Building
 
-Building this project requires that you have `make` installed as well as [rgbds](https://github.com/gbdev/rgbds) and [Aseprite](https://github.com/aseprite/aseprite) (which can be built from source if you do not have the paid version).
+Building this project requires that you have `make` installed as well as [rgbds](https://github.com/gbdev/rgbds), [Aseprite](https://github.com/aseprite/aseprite) (which can be built from source if you do not have the paid version), and [SuperFamiconv](https://github.com/Optiroc/SuperFamiconv).
 
 Provided you have all dependencies, the ROM of the game can be built by simply running `make`.
 
