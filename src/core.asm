@@ -71,7 +71,7 @@ DivideAB::
 ReadInput::
   ld a, [input]
   ld [previousInput], a
-  ld a, P1F_GET_DPAD
+  ld a, JOYP_GET_CTRL_PAD
   ld [rP1], a
   ld a, [rP1]
   ld a, [rP1]
@@ -80,7 +80,7 @@ ReadInput::
   and a, %1111
   swap a
   ld b, a
-  ld a, P1F_GET_BTN
+  ld a, JOYP_GET_BUTTONS
   ld [rP1], a
   ld a, [rP1]
   ld a, [rP1]

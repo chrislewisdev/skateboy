@@ -1,7 +1,10 @@
 INCLUDE "hardware.inc"
 INCLUDE "defines.inc"
 
-SPEED EQU 2
+DEF _OAMRAM      EQU $FE00 ; $FE00->$FE9F
+DEF _VRAM        EQU $8000 
+
+DEF SPEED EQU 2
 
 SECTION "Local variables - gfx.asm", WRAM0
 mapLoadIndex: db
@@ -19,7 +22,7 @@ EndGfxData:
 PlayerAnimations:
 INCBIN "gen/sprites.anim"
 EndPlayerAnimations:
-PlayerHeadFramesCount EQU 3
+DEF PlayerHeadFramesCount EQU 3
 
 HudMapData:
 INCBIN "gen/hud.tilemap"
@@ -29,43 +32,43 @@ MapData::
 INCBIN "data/sample-map.bin"
 EndMapData::
 
-MapHeight   EQU 18
-MapWidth    EQU (EndMapData - MapData) / MapHeight
+DEF MapHeight   EQU 18
+DEF MapWidth    EQU (EndMapData - MapData) / MapHeight
 EXPORT MapHeight, MapWidth
 
 SECTION "Graphics functions", ROM0
 ; Sprite references
-SPR0_Y      EQU _OAMRAM
-SPR0_X      EQU _OAMRAM+1
-SPR0_ID     EQU _OAMRAM+2
-SPR1_Y      EQU _OAMRAM+4
-SPR1_X      EQU _OAMRAM+5
-SPR1_ID     EQU _OAMRAM+6
-SPR2_Y      EQU _OAMRAM+8
-SPR2_X      EQU _OAMRAM+9
-SPR2_ID     EQU _OAMRAM+10
-SPR3_Y      EQU _OAMRAM+12
-SPR3_X      EQU _OAMRAM+13
-SPR3_ID     EQU _OAMRAM+14
+DEF SPR0_Y      EQU _OAMRAM
+DEF SPR0_X      EQU _OAMRAM+1
+DEF SPR0_ID     EQU _OAMRAM+2
+DEF SPR1_Y      EQU _OAMRAM+4
+DEF SPR1_X      EQU _OAMRAM+5
+DEF SPR1_ID     EQU _OAMRAM+6
+DEF SPR2_Y      EQU _OAMRAM+8
+DEF SPR2_X      EQU _OAMRAM+9
+DEF SPR2_ID     EQU _OAMRAM+10
+DEF SPR3_Y      EQU _OAMRAM+12
+DEF SPR3_X      EQU _OAMRAM+13
+DEF SPR3_ID     EQU _OAMRAM+14
 
 ; Frame indices for the skater animations
-SKTR_BASE_FRAME       EQU (SpriteData - TileData) / 16
+DEF SKTR_BASE_FRAME       EQU (SpriteData - TileData) / 16
 
 MACRO SetPlayerHeadFrame
   ld hl, PlayerAnimations
   ld bc, \1 * 8
   add hl, bc
-Y = 0
+DEF Y = 0
 REPT 2
-X = 0
+DEF X = 0
 REPT 4
   ld a, [hl]
   add SKTR_BASE_FRAME
   ld [SPR0_ID + (X * 4) + (Y * 16)], a
   inc hl
-X = X + 1
+DEF X = X + 1
 ENDR
-Y = Y + 1
+DEF Y = Y + 1
 ENDR
 ENDM
 
@@ -73,17 +76,17 @@ MACRO SetPlayerLegsFrame
   ld hl, PlayerAnimations + PlayerHeadFramesCount * 8
   ld bc, \1 * 8
   add hl, bc
-Y = 2
+DEF Y = 2
 REPT 2
-X = 0
+DEF X = 0
 REPT 4
   ld a, [hl]
   add SKTR_BASE_FRAME
   ld [SPR0_ID + (X * 4) + (Y * 16)], a
   inc hl
-X = X + 1
+DEF X = X + 1
 ENDR
-Y = Y + 1
+DEF Y = Y + 1
 ENDR
 ENDM
 
@@ -91,18 +94,18 @@ InitGraphics::
   ; Wait until vblank, disable screen so we can initialise things
   call WaitForNextVerticalBlank
   ld a, [rLCDC]
-  xor LCDCF_ON
+  xor LCDC_ON
   ld [rLCDC], a
   ; Zero out tile memory
   ld hl, _VRAM
   ld bc, $800
   call ZeroMemory
   ; Zero out tilemap
-  ld hl, _SCRN0
+  ld hl, TILEMAP0
   ld bc, 32*32
   call ZeroMemory
   ; Zero out the window map
-  ld hl, _SCRN1
+  ld hl, TILEMAP1
   ld bc, 32*32
   call ZeroMemory
   ; Zero out sprite attribute data
@@ -115,7 +118,7 @@ InitGraphics::
   ld bc, EndGfxData - TileData
   call CopyMemory
   ; Copy bg/window data
-  ld hl, _SCRN1
+  ld hl, TILEMAP1
   ld de, HudMapData
   ld bc, EndHudMapData - HudMapData
   call CopyMemory
@@ -143,7 +146,8 @@ InitGraphics::
   ld a, 120
   ld [rWY], a
   ; Turn display back on
-  ld a, LCDCF_ON|LCDCF_BG8000|LCDCF_BG9800|LCDCF_BGON|LCDCF_WIN9C00|LCDCF_WINON|LCDCF_OBJ8|LCDCF_OBJON
+  ; Do we need BG 8000 here?
+  ld a, LCDC_ON|LCDC_BLOCK01|LCDC_BG_9800|LCDC_BG_ON|LCDC_WIN_9C00|LCDC_WIN_ON|LCDC_OBJ_8|LCDC_OBJ_ON
   ld [rLCDC], a
   ret
 
@@ -172,28 +176,28 @@ ScrollRight:
 
 UpdateSprites:
   ; set X values first
-X = 0
+DEF X = 0
 REPT 4
   ld a, FIXED_X_POSITION + (X * 8)
-Y = 0
+DEF Y = 0
 REPT 4
   ld [SPR0_X + (X * 4) + (Y * 16)], a
-Y = Y + 1
+DEF Y = Y + 1
 ENDR
-X = X + 1
+DEF X = X + 1
 ENDR
 
   ; set Y values
-Y = 0
+DEF Y = 0
 REPT 4
   ld a, [verticalPosition.hi]
   add a, Y * 8
-X = 0
+DEF X = 0
 REPT 4
   ld [SPR0_Y + (X * 4) + (Y * 16)], a
-X = X + 1
+DEF X = X + 1
 ENDR
-Y = Y + 1
+DEF Y = Y + 1
 ENDR
   ret
 
@@ -293,7 +297,7 @@ DetermineAnimationFrames:
   ret
 
 CopyMapData:
-  ld de, _SCRN0
+  ld de, TILEMAP0
   ld hl, MapData
 REPT MapHeight
   ld bc, 32
@@ -308,7 +312,7 @@ ENDR
 LoadNewMapColumn:
   ; Determine where to place our new column data
   ld a, [mapInsertIndex]
-  ld hl, _SCRN0
+  ld hl, TILEMAP0
   ld b, 0
   ld c, a
   add hl, bc

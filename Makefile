@@ -18,9 +18,9 @@ $(OUTDIR)/%.o: $(SRCDIR)/%.asm $(INC) $(BIN) $(OUTDIR)/
 $(OUTDIR)/gfx.o: $(SRCDIR)/$(GENDIR)/sprites.2bpp $(SRCDIR)/$(GENDIR)/hud.2bpp
 
 $(SRCDIR)/$(GENDIR)/hud.2bpp: $(GENDIR)/hud.png
-	superfamiconv palette --mode gb --no-remap --in-image $< --out-data gen/hud.palette
-	superfamiconv tiles --mode gb --bpp 2 --no-flip --in-palette gen/hud.palette --in-image $< --out-data $@
-	superfamiconv map --mode gb --bpp 2 --no-flip --map-width 32 --tile-base-offset 88 \
+	/home/staticlinkage/tools/superfamiconv palette --mode gb --no-remap --in-image $< --out-data gen/hud.palette
+	/home/staticlinkage/tools/superfamiconv tiles --mode gb --bpp 2 --no-flip --in-palette gen/hud.palette --in-image $< --out-data $@
+	/home/staticlinkage/tools/superfamiconv map --mode gb --bpp 2 --no-flip --map-width 32 --tile-base-offset 88 \
 		--in-palette gen/hud.palette --in-image $< --in-tiles $@ --out-data src/gen/hud.tilemap
 
 $(GENDIR)/hud.png: $(GFXDIR)/hud.aseprite
@@ -33,7 +33,7 @@ $(GENDIR)/sprites.png: $(GFXDIR)/sprites.aseprite $(GENDIR)/
 	aseprite -b --sheet $@ --sheet-type vertical --data $(GENDIR)/sheet.json $<
 
 $(SRCDIR)/$(GENDIR)/:
-	mkdir $(SRCDIR)\$(GENDIR)
+	mkdir $(SRCDIR)/$(GENDIR)
 
 $(GENDIR)/:
 	mkdir $(GENDIR)
@@ -42,6 +42,6 @@ $(OUTDIR)/:
 	mkdir $(OUTDIR)
 
 clean:
-	rmdir /s /q gen
-	rmdir /s /q "src/gen"
-	rmdir /s /q build
+	rm -rf gen
+	rm -rf src/gen
+	rm -rf build
